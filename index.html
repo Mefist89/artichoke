@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="ro">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="PLAY ROOM ARTICHOKE - cafenea locală cu băuturi artizanale, deserturi, rezervări online și spațiu de joacă pentru copii de până la 6 ani."
+    />
+    <meta
+      name="keywords"
+      content="PLAY ROOM ARTICHOKE, cafenea, rezervari, meniu, deserturi, contact, spațiu de joacă, copii până la 6 ani"
+    />
+    <title>PLAY ROOM ARTICHOKE</title>
+    <link rel="icon" type="image/svg+xml" href="img/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Anton&family=Comfortaa:wght@300;400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles/normalize.css" />
+    <link rel="stylesheet" href="styles/main.css" />
+    <script src="scripts/main.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="index.html" class="brand" aria-label="Acasă">
+          <span class="brand-icon material-icons-outlined">coffee</span>
+          <span class="brand-text">PLAY ROOM ARTICHOKE</span>
+        </a>
+
+        <nav class="site-nav" aria-label="Navigare principală">
+          <a href="index.html" class="is-active">Acasă</a>
+          <a href="pages/galerie.html">Galerie</a>
+          <a href="pages/produse.html">Produse</a>
+          <a href="pages/servicii.html">Servicii</a>
+          <a href="pages/reguli.html">Reguli</a>
+          <a href="pages/contact.html">Contacte</a>
+        </nav>
+
+        <button
+          class="nav-toggle"
+          id="navToggle"
+          type="button"
+          aria-label="Deschide meniul"
+          aria-expanded="false"
+          aria-controls="mobileNav"
+        >
+          <span class="material-icons-outlined">menu</span>
+        </button>
+
+        <div class="header-actions">
+          <button
+            class="theme-toggle"
+            id="themeToggle"
+            type="button"
+            aria-label="Schimbă tema"
+          >
+            <span class="material-icons-outlined" id="themeIcon">dark_mode</span>
+          </button>
+          <a class="book-btn" href="pages/rezervari.html">Rezervă</a>
+        </div>
+      </div>
+    </header>
+    <nav class="mobile-nav" id="mobileNav" aria-label="Navigare mobilă">
+      <div class="container mobile-nav-inner">
+        <a href="index.html" class="is-active">Acasă</a>
+        <a href="pages/galerie.html">Galerie</a>
+        <a href="pages/produse.html">Produse</a>
+        <a href="pages/servicii.html">Servicii</a>
+        <a href="pages/reguli.html">Reguli</a>
+        <a href="pages/contact.html">Contacte</a>
+      </div>
+    </nav>
+
+    <main>
+      <section class="section about" id="about">
+        <div class="container about-grid">
+          <div class="about-slider" aria-label="Fotografii din cafenea">
+            <img
+              class="slide is-active"
+              src="img/slider/slider-1.jpg"
+              alt="Interior confortabil de cafenea"
+            />
+            <img
+              class="slide"
+              src="img/slider/slider-2.jpg"
+              alt="Barista pregătește cafea"
+            />
+            <img
+              class="slide"
+              src="img/slider/slider-3.jpg"
+              alt="Cafea și deserturi pe masă"
+            />
+            <button
+              class="slider-btn slider-btn-left"
+              type="button"
+              data-slide="prev"
+              aria-label="Fotografia anterioară"
+            >
+              <span class="material-icons-outlined">chevron_left</span>
+            </button>
+            <button
+              class="slider-btn slider-btn-right"
+              type="button"
+              data-slide="next"
+              aria-label="Fotografia următoare"
+            >
+              <span class="material-icons-outlined">chevron_right</span>
+            </button>
+            <div
+              class="slider-dots"
+              id="sliderDots"
+              aria-label="Comutatoare slider"
+            ></div>
+          </div>
+
+          <div class="about-copy">
+            <h1 class="display-title">DESPRE NOI</h1>
+            <article class="quote-card">
+              <p>
+                „Cafea și Confort” este locul unde te poți bucura de cafea
+                aromată, băuturi de autor și deserturi gustoase într-o atmosferă
+                caldă, ca acasă. Cafeneaua noastră este creată pentru cei care
+                caută un colț de liniște în mijlocul agitației urbane.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="hero-strip" aria-label="Banner decorativ">
+        <img
+          src="img/bg/latte-hero.jpg"
+          alt="Latte și croissante"
+        />
+      </section>
+
+      <section class="section seasonal" id="seasonal">
+        <div class="container">
+          <p class="section-kicker">Arome speciale pentru această perioadă</p>
+          <h2 class="section-title">Selecția sezonului</h2>
+
+          <div class="seasonal-grid">
+            <article class="season-card">
+              <img
+                src="img/oferte/latte-lavanda.jpg"
+                alt="Latte cu lavandă"
+              />
+              <div class="season-card-text">
+                <h3>Latte cu lavandă</h3>
+                <p>
+                  Espresso fin cu sirop de lavandă de casă și spumă de lapte
+                  catifelată.
+                </p>
+                <span>35 MDL</span>
+              </div>
+            </article>
+
+            <article class="season-card">
+              <img
+                src="img/oferte/latte-dovleac.jpg"
+                alt="Latte cu dovleac și condimente"
+              />
+              <div class="season-card-text">
+                <h3>Latte cu dovleac și condimente</h3>
+                <p>
+                  Băutură reconfortantă cu piure de dovleac, scorțișoară și
+                  nucșoară.
+                </p>
+                <span>35 MDL</span>
+              </div>
+            </article>
+          </div>
+
+          <div class="seasonal-actions">
+            <a class="seasonal-cta" href="pages/produse.html"
+              >Vezi toate produsele</a
+            >
+          </div>
+        </div>
+      </section>
+
+      <section class="section menu" id="menu">
+        <div class="container">
+          <div class="menu-head">
+            <p class="section-kicker">
+              Descoperă băuturi și deserturi pregătite cu grijă, pentru fiecare
+              moment al zilei.
+            </p>
+            <h2 class="section-title">Meniu</h2>
+          </div>
+
+          <div class="menu-block">
+            <h3>Cafea</h3>
+            <div class="menu-grid">
+              <article class="menu-item">
+                <img
+                  src="img/cofe/cappuccino.jpg"
+                  alt="Cappuccino"
+                />
+                <h4>Cappuccino</h4>
+                <p>cu artă latte</p>
+                <span>20 MDL</span>
+              </article>
+              <article class="menu-item">
+                <img
+                  src="img/cofe/cacao.jpg"
+                  alt="Cacao"
+                />
+                <h4>Cacao</h4>
+                <p>cu spumă de lapte</p>
+                <span>20 MDL</span>
+              </article>
+              <article class="menu-item">
+                <img
+                  src="img/cofe/espresso-macchiato.jpg"
+                  alt="Espresso macchiato"
+                />
+                <h4>Espresso macchiato</h4>
+                <p>porție clasică</p>
+                <span>20 MDL</span>
+              </article>
+              <article class="menu-item">
+                <img
+                  src="img/cofe/flat-white.jpg"
+                  alt="Flat white"
+                />
+                <h4>Flat white</h4>
+                <p>pe espresso dublu</p>
+                <span>15 MDL</span>
+              </article>
+            </div>
+          </div>
+
+          <div class="menu-block menu-block-almond">
+            <h3>Băuturi cu lapte de MIGDALE</h3>
+            <div class="menu-grid">
+              <article class="menu-item">
+                <img
+                  src="img/migdale/americano-migdale.jpg"
+                  alt="Americano cu lapte de migdale"
+                />
+                <h4>Americano cu lapte de migdale</h4>
+                <p>Aromă echilibrată și textură delicată.</p>
+                <span>25 MDL</span>
+              </article>
+              <article class="menu-item">
+                <img
+                  src="img/migdale/cappuccino-migdale.jpg"
+                  alt="Cappuccino cu lapte de migdale"
+                />
+                <h4>Cappuccino cu lapte de migdale</h4>
+                <p>Spumă fină și gust cremos.</p>
+                <span>30 MDL</span>
+              </article>
+              <article class="menu-item">
+                <img
+                  src="img/migdale/latte-migdale.jpg"
+                  alt="Latte cu lapte de migdale"
+                />
+                <h4>Latte cu lapte de migdale</h4>
+                <p>Latte catifelat cu note dulci.</p>
+                <span>40 MDL</span>
+              </article>
+              <article class="menu-item">
+                <img
+                  src="img/migdale/cacao-migdale.jpg"
+                  alt="Cacao cu lapte de migdale"
+                />
+                <h4>Cacao cu lapte de migdale</h4>
+                <p>Cacao caldă și aromată.</p>
+                <span>30 MDL</span>
+              </article>
+            </div>
+          </div>
+
+          <div class="menu-block menu-block-dessert">
+            <h3>Deserturi</h3>
+            <div class="menu-grid dessert-grid">
+              <article class="menu-item">
+                <img
+                  src="img/deserti/cupcake.jpg"
+                  alt="Cupcake"
+                />
+                <h4>Cupcake</h4>
+                <p>cu cremă de ciocolată</p>
+                <span>40 MDL</span>
+              </article>
+              <article class="menu-item">
+                <img
+                  src="img/deserti/donut.jpg"
+                  alt="Donut"
+                />
+                <h4>Donut</h4>
+                <p>cu glazură de căpșuni</p>
+                <span>35 MDL</span>
+              </article>
+              <article class="menu-item">
+                <img
+                  src="img/deserti/tort-pandispan.jpg"
+                  alt="Tort pandișpan"
+                />
+                <h4>Tort pandișpan</h4>
+                <p>cu cremă fină</p>
+                <span>50 MDL</span>
+              </article>
+              <article class="menu-item">
+                <img
+                  src="img/deserti/inghetata-spaghetti.jpg"
+                  alt="Înghețată"
+                />
+                <h4>Înghețată spaghetti</h4>
+                <p>desert cu înghețată</p>
+                <span>50 MDL</span>
+              </article>
+            </div>
+          </div>
+
+          <div class="seasonal-actions">
+            <a class="seasonal-cta" href="pages/produse.html"
+              >Vezi toate produsele</a
+            >
+          </div>
+        </div>
+      </section>
+
+      <section class="section services-section" id="servicii">
+        <div class="container">
+          <p class="section-kicker">Timp pentru tine</p>
+          <h2 class="section-title">Servicii</h2>
+          <div class="services-grid">
+            <a class="service-card" href="pages/rezervari.html" aria-label="Rezervare serviciu 1 oră">
+              <img
+                class="service-illustration"
+                src="img/servicii/serviciu-acces.svg"
+                alt="Serviciu de acces pentru 1 oră"
+              />
+              <h3>1 oră</h3>
+              <p>Acces standard în zona de joacă pentru o sesiune rapidă.</p>
+              <span class="service-price">40 MDL</span>
+            </a>
+            <a class="service-card" href="pages/rezervari.html" aria-label="Rezervare serviciu Rămânere 1 oră">
+              <img
+                class="service-illustration"
+                src="img/servicii/serviciu-ramanere.svg"
+                alt="Serviciu de rămânere 1 oră"
+              />
+              <h3>Rămânere 1 oră</h3>
+              <p>Sesiune extinsă cu timp suplimentar pentru activități.</p>
+              <span class="service-price">60 MDL</span>
+            </a>
+            <a class="service-card" href="pages/rezervari.html" aria-label="Rezervare serviciu 1 oră cu bonă">
+              <img
+                class="service-illustration"
+                src="img/servicii/serviciu-bona.svg"
+                alt="Serviciu de supraveghere cu bonă"
+              />
+              <h3>1 oră cu bonă</h3>
+              <p>Supraveghere dedicată pentru perioade mai lungi.</p>
+              <span class="service-price">100 MDL</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section home-gallery" id="galeria">
+        <div class="container">
+          <p class="section-kicker">Momente din cafenea</p>
+          <h2 class="section-title">Galeria</h2>
+          <div class="gallery-grid home-gallery-grid">
+            <figure class="gallery-item">
+              <img
+                src="img/galeria/foto1.jpg"
+                alt="Detalii din interiorul cafenelei"
+              />
+              <figcaption>
+                <h3>Relaxare</h3>
+                <p>Atmosferă caldă pentru pauze liniștite și momente plăcute.</p>
+                <a class="home-gallery-link" href="pages/galerie.html">Vezi mai mult</a>
+              </figcaption>
+            </figure>
+            <figure class="gallery-item">
+              <img src="img/galeria/foto2.jpg" alt="Cafea servită pe masă" />
+              <figcaption>
+                <h3>Cafea de autor</h3>
+                <p>Băuturi pregătite cu grijă, gust echilibrat și aromă intensă.</p>
+                <a class="home-gallery-link" href="pages/galerie.html">Vezi mai mult</a>
+              </figcaption>
+            </figure>
+            <figure class="gallery-item">
+              <img
+                src="img/galeria/foto3.jpg"
+                alt="Colț cozy în PLAY ROOM ARTICHOKE"
+              />
+              <figcaption>
+                <h3>Ambianță</h3>
+                <p>Loc perfect pentru întâlniri cu prietenii sau timp pentru tine.</p>
+                <a class="home-gallery-link" href="pages/galerie.html">Vezi mai mult</a>
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="section reviews" id="reviews">
+        <div class="container">
+          <h2 class="section-title">Recenziile oaspeților</h2>
+          <div class="reviews-track">
+            <article class="review-card">
+              <p>
+                Un loc minunat! Latte-ul cu lavandă a devenit băutura mea
+                preferată. Foarte confortabil, ca acasă.
+              </p>
+              <div class="review-author">
+                <span>A</span>
+                <div>
+                  <h4>Ana S.</h4>
+                  <small>★★★★★</small>
+                </div>
+              </div>
+            </article>
+            <article class="review-card">
+              <p>
+                Cea mai bună cafea din zonă. Personalul este mereu amabil, iar
+                deserturile se topesc în gură.
+              </p>
+              <div class="review-author">
+                <span>M</span>
+                <div>
+                  <h4>Mihai D.</h4>
+                  <small>★★★★★</small>
+                </div>
+              </div>
+            </article>
+            <article class="review-card">
+              <p>
+                Un loc liniștit pentru lucru și relaxare. Latte-ul cu dovleac
+                din această toamnă a fost magic.
+              </p>
+              <div class="review-author">
+                <span>E</span>
+                <div>
+                  <h4>Elena C.</h4>
+                  <small>★★★★☆</small>
+                </div>
+              </div>
+            </article>
+            <article class="review-card">
+              <p>
+                Ador cupcake-urile lor. Mereu proaspete și foarte frumoase. Le
+                recomand tuturor prietenilor.
+              </p>
+              <div class="review-author">
+                <span>C</span>
+                <div>
+                  <h4>Cristian V.</h4>
+                  <small>★★★★★</small>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer" id="contacts">
+      <div class="container footer-grid">
+        <div class="footer-col footer-col-brand">
+          <div class="brand brand-footer">
+            <span class="brand-icon material-icons-outlined">coffee</span>
+            <span class="brand-text">PLAY ROOM ARTICHOKE</span>
+          </div>
+          <p>
+            Atmosferă cozy și cea mai bună cafea din oraș. Vino la noi pentru
+            inspirație. Ne găsești în centrul orașului.
+          </p>
+        </div>
+
+        <div class="footer-col footer-col-links">
+          <h3>Navigare</h3>
+          <nav class="footer-menu" aria-label="Linkuri rapide">
+            <a href="index.html">Acasă</a>
+            <a href="pages/galerie.html">Galerie</a>
+            <a href="pages/produse.html">Produse</a>
+            <a href="pages/servicii.html">Servicii</a>
+            <a href="pages/reguli.html">Reguli</a>
+            <a href="pages/contact.html">Contacte</a>
+          </nav>
+        </div>
+
+        <div class="footer-col footer-col-contact">
+          <h3>Contact</h3>
+          <div class="footer-contacts-list">
+            <p>
+              <strong>Adresă</strong>
+              <span>Orașul Cahul, strada 31 August 1989, 4j</span>
+            </p>
+            <p>
+              <strong>Telefon</strong>
+              <span>069883294</span>
+            </p>
+            <p>
+              <strong>Program</strong>
+              <span>Lun-Dum: 09:00 - 22:00</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="footer-col footer-col-social">
+          <h3>Social</h3>
+          <div class="footer-social-list" aria-label="Rețele sociale">
+            <a
+              class="footer-icon-btn"
+              href="https://www.facebook.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Facebook"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H8.3V12h2.14V9.8c0-2.07 1.23-3.22 3.12-3.22.9 0 1.84.16 1.84.16v2.03h-1.04c-1.02 0-1.34.63-1.34 1.28V12h2.28l-.36 2.89h-1.92v6.99A10 10 0 0 0 22 12z"
+                />
+              </svg>
+            </a>
+            <a
+              class="footer-icon-btn"
+              href="https://www.instagram.com/playroomcopii?igsh=MWZrenc4bDl2cGZncA%3D%3D"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9a5.5 5.5 0 0 1-5.5 5.5h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2zm0 2A3.5 3.5 0 0 0 4 7.5v9A3.5 3.5 0 0 0 7.5 20h9a3.5 3.5 0 0 0 3.5-3.5v-9A3.5 3.5 0 0 0 16.5 4h-9zm9.75 1.5a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5zM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"
+                />
+              </svg>
+            </a>
+            <a
+              class="footer-icon-btn"
+              href="https://www.tiktok.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="TikTok"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M13.7 3h2.6c.2 1.5 1 2.7 2.3 3.5.9.5 1.9.8 3 .8v2.6c-1.2 0-2.4-.3-3.4-.8a7.2 7.2 0 0 1-1.9-1.4v7.6a6.2 6.2 0 1 1-6.2-6.2c.4 0 .8 0 1.2.1v2.7a3.3 3.3 0 0 0-1.2-.2 3.5 3.5 0 1 0 3.6 3.6V3z"
+                />
+              </svg>
+            </a>
+            <a
+              class="footer-icon-btn"
+              href="https://t.me/playroom_kidsroom"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Telegram"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 21 23 12 2 3l4 7 9 2-9 2-4 7z" />
+              </svg>
+            </a>
+          </div>
+          <div class="footer-actions" aria-label="Hartă">
+            <a
+              class="footer-icon-btn footer-map-btn"
+              href="https://maps.google.com/?q=Ora%C8%99ul+Cahul,+strada+31+August+1989,+4j"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Vezi pe hartă"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"
+                />
+              </svg>
+              <span>Vezi pe hartă</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="container copyright">
+        © 2026 SRL Play Room Artichoke. Toate drepturile rezervate.
+      </div>
+      <p class="container site-disclaimer">
+        Acest website a fost realizat în cadrul competiției „Tekwill Junior
+        Ambassadors” organizată de proiectul „Tekwill în Fiecare Școală” și nu
+        reflectă neapărat opinia proiectului.
+      </p>
+    </footer>
+  </body>
+</html>

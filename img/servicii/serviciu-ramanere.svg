@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-labelledby="title desc">
+  <title id="title">Ramanere 1 ora</title>
+  <desc id="desc">Ilustratie vectoriala cu clepsidra pentru sesiune extinsa.</desc>
+  <rect width="160" height="160" rx="26" fill="#dde4c8"/>
+  <rect x="48" y="22" width="64" height="12" rx="6" fill="#6d4c41"/>
+  <rect x="48" y="126" width="64" height="12" rx="6" fill="#6d4c41"/>
+  <path d="M56 34h48c0 20-10 27-24 35-14-8-24-15-24-35z" fill="#fdf5e6" stroke="#6d4c41" stroke-width="4"/>
+  <path d="M56 126h48c0-20-10-27-24-35-14 8-24 15-24 35z" fill="#fdf5e6" stroke="#6d4c41" stroke-width="4"/>
+  <path d="M72 58h16l-8 8z" fill="#6d4c41"/>
+  <path d="M66 108c4-8 12-12 14-13 2 1 10 5 14 13v10H66z" fill="#c9b58d"/>
+</svg>
