@@ -200,6 +200,49 @@ a {
   gap: 0.55rem;
 }
 
+.auth-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.auth-user-name {
+  max-width: 11rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 72%, #fff);
+  color: var(--primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.auth-link-btn {
+  padding: 0.65rem 0.95rem;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 68%, #fff);
+  color: var(--primary);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease, background-color 0.2s ease;
+}
+
+.auth-link-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.97);
+}
+
+.auth-logout-btn {
+  font-family: inherit;
+}
+
 .nav-toggle {
   display: none;
   width: 2.5rem;
@@ -842,6 +885,20 @@ html.dark .menu-item {
   transform: translateY(-1px);
   background: var(--primary);
   color: #fff;
+}
+
+.add-to-cart-btn {
+  background-color: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: opacity 0.2s ease;
+}
+.add-to-cart-btn:hover {
+  opacity: 0.8;
 }
 
 .reviews {
@@ -2126,6 +2183,10 @@ html.dark .service-card {
     display: none;
   }
 
+  .auth-user-name {
+    max-width: 8rem;
+  }
+
   .nav-toggle {
     display: inline-flex;
   }
@@ -2313,6 +2374,19 @@ html.dark .service-card {
   .theme-toggle {
     width: 2.25rem;
     height: 2.25rem;
+  }
+
+  .auth-controls {
+    gap: 0.35rem;
+  }
+
+  .auth-user-name {
+    display: none;
+  }
+
+  .auth-link-btn {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.68rem;
   }
 
   .scroll-top-btn {

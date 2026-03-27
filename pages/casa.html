@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Reguli PLAY ROOM ARTICHOKE: text, imagine și video pentru joacă sigură în spațiul destinat copiilor de până la 6 ani."
+      content="Produse PLAY ROOM ARTICHOKE: cafea, ceai, deserturi și mic dejun, într-o cafenea cu spațiu de joacă pentru copii de până la 6 ani."
     />
     <meta
       name="keywords"
-      content="PLAY ROOM ARTICHOKE, reguli, joacă sigură, copii, video, spațiu de joacă, copii până la 6 ani"
+      content="PLAY ROOM ARTICHOKE, produse, cafea, ceai, deserturi, mic dejun, spațiu de joacă, copii până la 6 ani"
     />
-    <title>Reguli - PLAY ROOM ARTICHOKE</title>
+    <title>Produse - PLAY ROOM ARTICHOKE</title>
+    <link rel="canonical" href="https://artichoke-seven.vercel.app/pages/casa.html" />
     <link rel="icon" type="image/svg+xml" href="../img/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -26,10 +27,10 @@
     <link rel="stylesheet" href="../styles/normalize.css" />
     <link rel="stylesheet" href="../styles/main.css" />
     <script src="../scripts/main.js" defer></script>
+    <script type="module" src="../scripts/supabase.js"></script>
   </head>
   <body>
-   
-<header class="site-header">
+    <header class="site-header">
       <div class="container header-inner">
         <a href="../index.html" class="brand" aria-label="Acasă">
           <span class="brand-icon material-icons-outlined">coffee</span>
@@ -65,24 +66,51 @@
           >
             <span class="material-icons-outlined" id="themeIcon">dark_mode</span>
           </button>
+          <div class="auth-controls">
+            <span class="auth-user-name" id="authUserName" hidden></span>
+            <a class="auth-link-btn" id="authLoginLink" href="login.html">Войти</a>
+            <button class="auth-link-btn auth-logout-btn" id="authLogoutBtn" type="button" hidden>Выйти</button>
+          </div>
           <a class="book-btn" href="rezervari.html">Rezervă</a>
         </div>
       </div>
     </header>
 
+    <nav class="mobile-nav" id="mobileNav" aria-label="Navigare mobilă">
+      <div class="container mobile-nav-inner">
+        <a href="../index.html">Acasă</a>
+        <a href="galerie.html">Galerie</a>
+        <a href="produse.html" class="is-active">Produse</a>
+        <a href="servicii.html">Servicii</a>
+        <a href="reguli.html">Reguli</a>
+        <a href="contact.html">Contacte</a>
+      </div>
+    </nav>
 
     <main>
-      
-        <section class="section products-section">
+      <section class="section contact-hero">
+        <div class="container">
+          <div class="contact-hero-card">
+            <p class="section-kicker">Selectează ce ți se potrivește</p>
+            <h1 class="section-title">Produse</h1>
+            <p>
+              Inspirat din meniul de referință: băuturi, deserturi și opțiuni
+              de mic dejun pentru orice moment al zilei.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section products-section">
         <div class="container products-layout">
           <aside class="products-sidebar">
             <h2>Categorii</h2>
             <nav aria-label="Categorii produse">
-              <a href="#prod-cafea">Cafea</a>
-              <a href="#prod-migdale">Băuturi cu MIGDALE</a>
-              <a href="#prod-ceai">Ceai și infuzii</a>
-              <a href="#prod-desert">Deserturi</a>
-              <a href="#prod-micdejun">Mic dejun</a>
+              <a href="#" class="category-nav-link" data-category-id="prod-cafea">Cafea</a>
+              <a href="#" class="category-nav-link" data-category-id="prod-migdale">Băuturi cu MIGDALE</a>
+              <a href="#" class="category-nav-link" data-category-id="prod-ceai">Ceai și infuzii</a>
+              <a href="#" class="category-nav-link" data-category-id="prod-desert">Deserturi</a>
+              <a href="#" class="category-nav-link" data-category-id="prod-micdejun">Mic dejun</a>
             </nav>
             <p class="products-side-note">
               Toate produsele sunt preparate din ingrediente proaspete, iar
@@ -90,123 +118,14 @@
             </p>
           </aside>
 
-          <div class="products-content">
-            <section class="products-category" id="prod-cafea">
-              <h2>Cafea</h2>
-              <p>Băuturi clasice și de autor, cu boabe atent selecționate.</p>
-              <div class="products-grid">
-                <article class="product-card">
-                  <img
-                    src="../img/cofe/cappuccino.jpg"
-                    alt="Cappuccino"
-                  />
-                  <div class="product-card-body">
-                    <h3>Cappuccino</h3>
-                    <p>Espresso dublu, lapte texturat și artă latte.</p>
-                    <div class="product-card-meta">
-                      <span class="product-price">20 MDL</span>
-                    </div>
-                  </div>
-                </article>
-                <article class="product-card">
-                  <img
-                    src="../img/cofe/cacao.jpg"
-                    alt="Cacao"
-                  />
-                  <div class="product-card-body">
-                    <h3>Cacao</h3>
-                    <p>Cacao caldă cu lapte spumat și gust catifelat.</p>
-                    <div class="product-card-meta">
-                      <span class="product-price">20 MDL</span>
-                    </div>
-                  </div>
-                </article>
-                <article class="product-card">
-                  <img
-                    src="../img/cofe/espresso-macchiato.jpg"
-                    alt="Espresso macchiato"
-                  />
-                  <div class="product-card-body">
-                    <h3>Espresso macchiato</h3>
-                    <p>Espresso intens cu o notă fină de lapte.</p>
-                    <div class="product-card-meta">
-                      <span class="product-price">20 MDL</span>
-                    </div>
-                  </div>
-                </article>
-                <article class="product-card">
-                  <img
-                    src="../img/cofe/flat-white.jpg"
-                    alt="Flat white"
-                  />
-                  <div class="product-card-body">
-                    <h3>Flat white</h3>
-                    <p>Espresso dublu și lapte fin, textură cremoasă.</p>
-                    <div class="product-card-meta">
-                      <span class="product-price">15 MDL</span>
-                    </div>
-                  </div>
-                </article>
-                <article class="product-card">
-                  <img
-                    src="../img/cofe/latte.jpg"
-                    alt="Latte"
-                  />
-                  <div class="product-card-body">
-                    <h3>Latte</h3>
-                    <p>Băutură echilibrată cu lapte catifelat.</p>
-                    <div class="product-card-meta">
-                      <span class="product-price">25 MDL</span>
-                    </div>
-                  </div>
-                </article>
-                <article class="product-card">
-                  <img
-                    src="../img/cofe/latte-caramel.jpg"
-                    alt="Latte caramel"
-                  />
-                  <div class="product-card-body">
-                    <h3>Latte Caramel</h3>
-                    <p>Latte catifelat cu caramel și spumă densă.</p>
-                    <div class="product-card-meta">
-                      <span class="product-price">25 MDL</span>
-                    </div>
-                  </div>
-                </article>
-                <article class="product-card">
-                  <img
-                    src="../img/cofe/hot-chocolate.jpg"
-                    alt="Ciocolată caldă"
-                  />
-                  <div class="product-card-body">
-                    <h3>Ciocolată caldă</h3>
-                    <p>Ciocolată bogată cu lapte, aromă intensă.</p>
-                    <div class="product-card-meta">
-                      <span class="product-price">20 MDL</span>
-                    </div>
-                  </div>
-                </article>
-                <article class="product-card">
-                  <img
-                    src="../img/cofe/americano.jpg"
-                    alt="Americano"
-                  />
-                  <div class="product-card-body">
-                    <h3>Americano</h3>
-                    <p>Gust echilibrat, intensitate moderată.</p>
-                    <div class="product-card-meta">
-                      <span class="product-price">15 MDL</span>
-                    </div>
-                  </div>
-                </article>
-              </div>
-            </section>
+          <div class="products-content" id="productsContainer">
+            <!-- Products will be loaded here by JavaScript -->
+          </div>
+        </div>
+      </section>
     </main>
 
-
-
-
-     <footer class="site-footer">
+    <footer class="site-footer">
       <div class="container footer-grid">
         <div class="footer-col footer-col-brand">
           <div class="brand brand-footer">
@@ -214,8 +133,7 @@
             <span class="brand-text">PLAY ROOM ARTICHOKE</span>
           </div>
           <p>
-            Atmosferă cozy și cea mai bună cafea din oraș. Vino la noi pentru
-            inspirație. Ne găsești în centrul orașului.
+            Atmosferă cozy și cea mai bună cafea din oraș. Vino la noi pentru inspirație. Ne găsești în centrul orașului.
           </p>
         </div>
 
@@ -326,10 +244,10 @@
         © 2026 SRL Play Room Artichoke. Toate drepturile rezervate.
       </div>
       <p class="container site-disclaimer">
-        Acest website a fost realizat în cadrul competiției „Tekwill Junior
-        Ambassadors” organizată de proiectul „Tekwill în Fiecare Școală” și nu
-        reflectă neapărat opinia proiectului.
+        Acest website a fost realizat în cadrul competiției „Tekwill Junior Ambassadors” organizată de proiectul „Tekwill în Fiecare Școală” și nu reflectă neapărat opinia proiectului.
       </p>
     </footer>
+
+    <script type="module" src="../data/products.js"></script>
   </body>
 </html>
