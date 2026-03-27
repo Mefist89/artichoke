@@ -9,6 +9,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 const indexPageUrl = new URL("../index.html", import.meta.url);
 const loginPageUrl = new URL("../pages/login.html", import.meta.url);
 const registerPageUrl = new URL("../pages/register.html", import.meta.url);
+const profilePageUrl = new URL("../pages/profile.html", import.meta.url);
 
 const authUserNameEl = document.getElementById("authUserName");
 const authLoginLinkEl = document.getElementById("authLoginLink");
@@ -134,7 +135,7 @@ if (googleAuthBtns.length > 0) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: indexPageUrl.href,
+          redirectTo: profilePageUrl.href,
           queryParams: {
             prompt: "select_account",
             access_type: "offline",
@@ -183,7 +184,7 @@ getActiveSession().then(async (session) => {
   console.log("Utilizator autentificat:", session.user.email);
 
   if (isAuthPage()) {
-    window.location.replace(indexPageUrl.href);
+    window.location.replace(profilePageUrl.href);
   }
 });
 
@@ -197,7 +198,7 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     if (allowed) {
       console.log("Autentificare reușită:", session.user.email);
       if (isAuthPage()) {
-        window.location.replace(indexPageUrl.href);
+        window.location.replace(profilePageUrl.href);
       }
     }
   }

@@ -218,3 +218,126 @@ if (lightboxImages.length) {
     }
   });
 }
+
+// Add profile link to navigation when user is authenticated
+document.addEventListener('DOMContentLoaded', () => {
+  // Check if we have auth elements on the page
+  const authUserNameEl = document.getElementById("authUserName");
+  const authLoginLinkEl = document.getElementById("authLoginLink");
+
+  if (authUserNameEl && authLoginLinkEl) {
+    // Determine the correct path to the profile page based on current location
+    const currentPath = window.location.pathname;
+    let profilePath;
+
+    if (currentPath.includes('/pages/')) {
+      // If we're in the pages directory, go up one level
+      profilePath = './profile.html';
+    } else {
+      // If we're in the root directory, go to pages subdirectory
+      profilePath = './pages/profile.html';
+    }
+
+    // Create a profile link element for desktop navigation
+    const profileLink = document.createElement('a');
+    profileLink.href = profilePath;
+    profileLink.textContent = 'Profil';
+    profileLink.className = 'auth-link-btn';
+
+    // Insert the profile link before the login link in desktop navigation
+    authLoginLinkEl.parentNode.insertBefore(profileLink, authLoginLinkEl);
+
+    // Store reference to the profile link for later use
+    const profileLinkEl = authLoginLinkEl.previousElementSibling;
+
+    // Also add profile link to mobile navigation if it exists
+    const mobileNav = document.querySelector('.mobile-nav .mobile-nav-inner');
+    if (mobileNav) {
+      const mobileProfileLink = document.createElement('a');
+      mobileProfileLink.href = profilePath;
+      mobileProfileLink.textContent = 'Profil';
+      mobileProfileLink.className = 'profile-mobile-link';
+
+      // Find the login link in mobile navigation to insert before it
+      const mobileLoginLink = mobileNav.querySelector('a[href="login.html"]');
+      if (mobileLoginLink) {
+        mobileNav.insertBefore(mobileProfileLink, mobileLoginLink);
+      } else {
+        // If no login link found, just append to the end
+        mobileNav.appendChild(mobileProfileLink);
+      }
+
+      // Store reference to mobile profile link
+      const mobileProfileLinkEl = mobileLoginLink ? mobileLoginLink.previousElementSibling : mobileNav.lastElementChild;
+
+      // Hide/show mobile profile link based on auth state
+      const hideMobileProfileLink = () => {
+        if (mobileProfileLinkEl) {
+          mobileProfileLinkEl.style.display = 'none';
+        }
+      };
+
+      const showMobileProfileLink = () => {
+        if (mobileProfileLinkEl) {
+          mobileProfileLinkEl.style.display = 'block';
+        }
+      };
+
+      // Update mobile profile link visibility based on auth state
+      const updateMobileProfileLinkVisibility = () => {
+        if (authUserNameEl.offsetParent !== null) { // Element is visible (user is logged in)
+          showMobileProfileLink();
+        } else { // Element is hidden (user is not logged in)
+          hideMobileProfileLink();
+        }
+      };
+
+      // Update mobile link when auth state changes
+      updateMobileProfileLinkVisibility();
+    }
+
+    // Hide profile link when user is not logged in
+    const hideProfileLink = () => {
+      if (profileLinkEl) {
+        profileLinkEl.style.display = 'none';
+      }
+    };
+
+    // Show profile link when user is logged in
+    const showProfileLink = () => {
+      if (profileLinkEl) {
+        profileLinkEl.style.display = 'inline-flex';
+      }
+    };
+
+    // Listen for auth state changes to show/hide profile link
+    // We'll check the visibility of the username element to determine auth state
+    const checkAuthState = () => {
+      if (authUserNameEl.offsetParent !== null) { // Element is visible
+        showProfileLink();
+        // Also update mobile navigation if it exists
+        const mobileProfileLink = document.querySelector('.profile-mobile-link');
+        if (mobileProfileLink) {
+          mobileProfileLink.style.display = 'block';
+        }
+      } else { // Element is hidden
+        hideProfileLink();
+        // Also update mobile navigation if it exists
+        const mobileProfileLink = document.querySelector('.profile-mobile-link');
+        if (mobileProfileLink) {
+          mobileProfileLink.style.display = 'none';
+        }
+      }
+    };
+
+    // Run check when page loads
+    checkAuthState();
+
+    // Set up a MutationObserver to watch for changes in the auth elements
+    const observer = new MutationObserver(checkAuthState);
+    observer.observe(authUserNameEl, {
+      attributes: true,
+      attributeFilter: ['hidden']
+    });
+  }
+});
