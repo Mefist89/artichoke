@@ -62,17 +62,46 @@ function isGmailUser(user) {
 }
 
 async function getActiveSession() {
-  const {
-    data: { session },
-    error,
-  } = await supabase.auth.getSession();
+  try {
+    // Пробуем получить сессию через SDK с таймаутом 3с
+    const timeoutResult = { data: { session: null }, error: null, timedOut: true };
+    const timeout = new Promise((resolve) => setTimeout(() => resolve(timeoutResult), 3000));
+    const result = await Promise.race([supabase.auth.getSession(), timeout]);
 
-  if (error) {
-    console.error("Nu s-a putut obține sesiunea curentă:", error);
+    if (result.timedOut) {
+      // SDK завис — пробуем достать сессию из localStorage
+      return getSessionFromStorage();
+    }
+
+    const { data: { session }, error } = result;
+    if (error) {
+      console.error("Nu s-a putut obține sesiunea curentă:", error);
+      return null;
+    }
+
+    return session;
+  } catch (e) {
+    console.error("Excepție la obținerea sesiunii:", e);
+    return getSessionFromStorage();
+  }
+}
+
+/**
+ * Запасной метод: достаём сессию прямо из localStorage.
+ * Supabase хранит её в ключе формата "sb-<ref>-auth-token".
+ */
+function getSessionFromStorage() {
+  try {
+    const key = Object.keys(localStorage).find(
+      (k) => k.startsWith("sb-") && k.endsWith("-auth-token"),
+    );
+    if (!key) return null;
+
+    const raw = JSON.parse(localStorage.getItem(key));
+    return raw || null;
+  } catch {
     return null;
   }
-
-  return session;
 }
 
 async function syncProfile(user) {
@@ -153,19 +182,25 @@ if (googleAuthBtns.length > 0) {
 
 if (authLogoutBtnEl) {
   authLogoutBtnEl.addEventListener("click", async () => {
-    const { error } = await supabase.auth.signOut();
+    authLogoutBtnEl.disabled = true;
+    authLogoutBtnEl.textContent = "...";
 
-    if (error) {
-      console.error("Eroare la deconectare:", error);
-      alert("Nu s-a putut realiza deconectarea.");
-      return;
-    }
+    // 1. Curăță IMEDIAT sesiunea din localStorage (nu depinde de rețea)
+    try {
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith("sb-") || k.includes("supabase"))
+        .forEach((k) => localStorage.removeItem(k));
+    } catch (e) {}
 
+    // 2. Încearcă signOut oficial cu timeout de 1.5s
+    try {
+      const timeout = new Promise((resolve) => setTimeout(resolve, 1500));
+      await Promise.race([supabase.auth.signOut({ scope: "local" }), timeout]);
+    } catch (e) {}
+
+    // 3. Actualizează UI și redirecționează
     updateAuthHeader(null);
-
-    if (isAuthPage()) {
-      window.location.replace(loginPageUrl.href);
-    }
+    window.location.href = loginPageUrl.href;
   });
 }
 
@@ -212,25 +247,15 @@ export async function addToCart(productName, price, quantity = 1) {
   const session = await getActiveSession();
 
   if (!session) {
-    alert("Te rugăm să te autentifici pentru a adăuga produse în coș.");
     window.location.href = loginPageUrl.href;
     return false;
   }
 
-  if (!(await enforceGmailAccount(session))) {
-    return false;
-  }
-
-  const normalizedPrice = Number(price);
+  const normalizedPrice    = Number(price);
   const normalizedQuantity = Number(quantity);
 
   if (!productName || !Number.isFinite(normalizedPrice) || !Number.isInteger(normalizedQuantity) || normalizedQuantity < 1) {
-    console.error("Date invalide pentru adăugarea în coș:", {
-      productName,
-      price,
-      quantity,
-    });
-    alert("Produsul nu a putut fi adăugat în coș din cauza unor date invalide.");
+    console.error("Date invalide pentru adăugarea în coș:", { productName, price, quantity });
     return false;
   }
 
@@ -245,12 +270,68 @@ export async function addToCart(productName, price, quantity = 1) {
 
   if (error) {
     console.error("Eroare la adăugarea în coș:", error);
-    alert("A apărut o eroare. Încearcă din nou.");
     return false;
   }
 
-  alert(`${productName} a fost adăugat în coș cu succes.`);
   return true;
+}
+
+/**
+ * placeOrder — переносит cartItems в orders + order_items, затем
+ * очищает корзину пользователя. Возвращает { success, orderId?, error? }.
+ */
+export async function placeOrder(userId, cartItems, notes = '') {
+  if (!userId || !cartItems || cartItems.length === 0) {
+    return { success: false, error: 'Coșul este gol.' };
+  }
+
+  const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  // 1. Создаём заказ
+  const { data: orderData, error: orderError } = await supabase
+    .from('orders')
+    .insert([{ user_id: userId, status: 'pending', total, notes }])
+    .select('id')
+    .single();
+
+  if (orderError) {
+    console.error('Eroare la crearea comenzii:', orderError);
+    return { success: false, error: orderError.message };
+  }
+
+  const orderId = orderData.id;
+
+  // 2. Добавляем позиции заказа
+  const items = cartItems.map(item => ({
+    order_id:     orderId,
+    product_name: item.product_name,
+    price:        item.price,
+    quantity:     item.quantity,
+  }));
+
+  const { error: itemsError } = await supabase
+    .from('order_items')
+    .insert(items);
+
+  if (itemsError) {
+    console.error('Eroare la salvarea produselor comenzii:', itemsError);
+    // Заказ создан, но позиции не вставлены — помечаем как отменённый
+    await supabase.from('orders').update({ status: 'cancelled' }).eq('id', orderId);
+    return { success: false, error: itemsError.message };
+  }
+
+  // 3. Очищаем корзину
+  const { error: clearError } = await supabase
+    .from('cart_items')
+    .delete()
+    .eq('user_id', userId);
+
+  if (clearError) {
+    console.warn('Coșul nu a putut fi golit automat:', clearError);
+    // Не критично — заказ уже создан
+  }
+
+  return { success: true, orderId };
 }
 
 export function openLoginPage() {

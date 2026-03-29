@@ -103,19 +103,45 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-  productsContainer.addEventListener("click", (event) => {
+  productsContainer.addEventListener("click", async (event) => {
     const button = event.target.closest(".add-to-cart-btn");
     if (!button) return;
 
-    const name = button.getAttribute("data-name");
+    const name  = button.getAttribute("data-name");
     const price = Number(button.getAttribute("data-price"));
 
-    import("../scripts/supabase.js")
-      .then(({ addToCart }) => addToCart(name, price, 1))
-      .catch((error) => {
-        console.error("Nu s-a putut încărca modulul pentru coș:", error);
-        alert("Funcția de cumpărare nu este disponibilă momentan.");
-      });
+    // Визуальная обратная связь сразу
+    const originalText = button.textContent;
+    button.disabled    = true;
+    button.textContent = "...";
+
+    try {
+      const { addToCart } = await import("../scripts/supabase.js");
+      const success = await addToCart(name, price, 1);
+
+      if (success) {
+        button.textContent = "✓ Adăugat";
+        button.style.background = "var(--primary, #4caf50)";
+        button.style.color = "#fff";
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.disabled    = false;
+          button.style.background = "";
+          button.style.color = "";
+        }, 2000);
+      } else {
+        // addToCart вернул false — возможно не авторизован (редирект уже срабатывает)
+        button.textContent = originalText;
+        button.disabled    = false;
+      }
+    } catch (error) {
+      console.error("Nu s-a putut încărca modulul pentru coș:", error);
+      button.textContent = "Eroare";
+      setTimeout(() => {
+        button.textContent = originalText;
+        button.disabled    = false;
+      }, 2000);
+    }
   });
 
   fetchProducts();

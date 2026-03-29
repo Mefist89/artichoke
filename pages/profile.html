@@ -34,11 +34,9 @@
 
         <nav class="site-nav" aria-label="Navigare principală">
           <a href="../index.html">Acasă</a>
-          <a href="galerie.html">Galerie</a>
-          <a href="produse.html">Produse</a>
-          <a href="servicii.html">Servicii</a>
-          <a href="reguli.html">Reguli</a>
-          <a href="contact.html">Contacte</a>
+          <a href="./profile.html">Profil</a>
+          <a href="./casa.html">Comanda</a>
+          <a href="./cos.html">Cos</a>
         </nav>
 
         <button
@@ -59,12 +57,23 @@
             type="button"
             aria-label="Schimbă tema"
           >
-            <span class="material-icons-outlined" id="themeIcon">dark_mode</span>
+            <span class="material-icons-outlined" id="themeIcon"
+              >dark_mode</span
+            >
           </button>
           <div class="auth-controls">
             <span class="auth-user-name" id="authUserName" hidden></span>
-            <a class="auth-link-btn" id="authLoginLink" href="login.html">Войти</a>
-            <button class="auth-link-btn auth-logout-btn" id="authLogoutBtn" type="button" hidden>Deconectare</button>
+            <a class="auth-link-btn" id="authLoginLink" href="login.html"
+              >Autentificare</a
+            >
+            <button
+              class="auth-link-btn auth-logout-btn"
+              id="authLogoutBtn"
+              type="button"
+              hidden
+            >
+              Deconectare
+            </button>
           </div>
           <a class="book-btn" href="rezervari.html">Rezervă</a>
         </div>
@@ -130,68 +139,113 @@
             <div class="contact-card">
               <h2>Acțiuni Rapide</h2>
               <div class="contact-item">
-                <a href="produse.html" class="home-gallery-link">Comandă Produse</a>
+                <a href="cos.html" class="home-gallery-link">Coșul Meu</a>
               </div>
               <div class="contact-item">
-                <a href="rezervari.html" class="home-gallery-link">Fă o Rezervare</a>
+                <a href="produse.html" class="home-gallery-link"
+                  >Comandă Produse</a
+                >
               </div>
               <div class="contact-item">
-                <button id="updateProfileBtn" class="home-gallery-link" type="button">Actualizează Profilul</button>
+                <a href="rezervari.html" class="home-gallery-link"
+                  >Fă o Rezervare</a
+                >
+              </div>
+              <div class="contact-item">
+                <button
+                  id="updateProfileBtn"
+                  class="home-gallery-link"
+                  type="button"
+                >
+                  Actualizează Profilul
+                </button>
               </div>
             </div>
           </aside>
 
           <article class="contact-form-card">
-           <h2>Istoric Comenzi</h2>
-           <p>Vezi comenzile tale anterioare și starea acestora.</p>
-           
-           <div class="contact-form">
-             <div id="ordersHistory">
-               <div class="order-history-container">
-                 <p class="form-status">Încărcare istoric comenzi...</p>
-               </div>
-             </div>
-             
-             <div class="contact-item" style="margin-top: 1.5rem;">
-               <h3>Preferințe</h3>
-               <div class="contact-form-row">
-                 <label>
-                   <input type="checkbox" id="notificationsEnabled" checked>
-                   Primește notificări
-                 </label>
-                 <label>
-                   <input type="checkbox" id="newsletterSubscribed" checked>
-                   Abonează-te la newsletter
-                 </label>
-               </div>
-             </div>
-           </div>
-         </article>
+            <h2>Istoric Comenzi</h2>
+            <p>Vezi comenzile tale anterioare și starea acestora.</p>
+
+            <div class="contact-form">
+              <div id="ordersHistory">
+                <div class="order-history-container">
+                  <p class="form-status">Încărcare istoric comenzi...</p>
+                </div>
+              </div>
+
+              <div class="contact-item" style="margin-top: 1.5rem">
+                <h3>Preferințe</h3>
+                <div class="contact-form-row">
+                  <label>
+                    <input type="checkbox" id="notificationsEnabled" checked />
+                    Primește notificări
+                  </label>
+                  <label>
+                    <input type="checkbox" id="newsletterSubscribed" checked />
+                    Abonează-te la newsletter
+                  </label>
+                </div>
+              </div>
+            </div>
+          </article>
         </div>
       </section>
     </main>
 
     <!-- Profile Update Modal -->
-    <div id="profileModal" class="lightbox-overlay" style="display: none; z-index: 100;">
-      <div class="lightbox-frame" style="background: var(--card); border-radius: 1.5rem; padding: 2rem; max-width: 500px;">
-        <button type="button" class="lightbox-close" id="closeProfileModal" aria-label="Close modal">
+    <div
+      id="profileModal"
+      class="lightbox-overlay"
+      style="display: none; z-index: 100"
+    >
+      <div
+        class="lightbox-frame"
+        style="
+          background: var(--card);
+          border-radius: 1.5rem;
+          padding: 2rem;
+          max-width: 500px;
+        "
+      >
+        <button
+          type="button"
+          class="lightbox-close"
+          id="closeProfileModal"
+          aria-label="Close modal"
+        >
           <span class="material-icons-outlined" aria-hidden="true">close</span>
         </button>
-        
+
         <h2>Actualizează Profilul</h2>
         <form id="updateProfileForm" class="contact-form">
           <label>
             Nume Complet
-            <input type="text" id="fullName" name="fullName" placeholder="Introdu numele complet" required />
+            <input
+              type="text"
+              id="fullName"
+              name="fullName"
+              placeholder="Introdu numele complet"
+              required
+            />
           </label>
-          
+
           <label>
             Telefon
-            <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="Număr de telefon" />
+            <input
+              type="tel"
+              id="phoneNumber"
+              name="phoneNumber"
+              placeholder="Număr de telefon"
+            />
           </label>
-          
+
           <button type="submit">Salvează Modificările</button>
-          <p class="form-status" id="updateProfileStatus" aria-live="polite"></p>
+          <p
+            class="form-status"
+            id="updateProfileStatus"
+            aria-live="polite"
+          ></p>
         </form>
       </div>
     </div>
@@ -323,7 +377,7 @@
     </footer>
 
     <script src="../scripts/profile.js" type="module"></script>
-    
+
     <style>
       .order-history-container {
         margin: 1rem 0;
@@ -331,7 +385,7 @@
         background: var(--surface);
         border-radius: 0.75rem;
       }
-      
+
       .order-item {
         padding: 0.75rem;
         border-bottom: 1px solid var(--bg);
@@ -339,16 +393,16 @@
         justify-content: space-between;
         align-items: center;
       }
-      
+
       .order-item:last-child {
         border-bottom: none;
       }
-      
+
       .order-date {
         font-weight: bold;
         color: var(--primary);
       }
-      
+
       .order-status {
         padding: 0.25rem 0.75rem;
         border-radius: 999px;
@@ -356,22 +410,27 @@
         font-weight: bold;
         text-transform: uppercase;
       }
-      
+
       .order-status.completed {
         background: #e8f5e9;
         color: #2e7d32;
       }
-      
+
       .order-status.pending {
         background: #fff8e1;
         color: #f57f17;
       }
-      
+
       .order-status.processing {
         background: #e3f2fd;
         color: #1976d2;
       }
-      
+
+      .order-status.cancelled {
+        background: #fde8e8;
+        color: #c0392b;
+      }
+
       .order-total {
         font-weight: bold;
         color: var(--primary);
