@@ -6,7 +6,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', async function () {
-  const { supabase } = await import('./supabase.js');
+  const { supabase, getActiveSession } = await import('./supabase.js');
 
 
   // ── DOM-элементы ────────────────────────────────────────
@@ -37,9 +37,9 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   // ── Загрузка профиля ────────────────────────────────────
   async function loadUserProfile() {
-    const { data: { session }, error } = await supabase.auth.getSession();
+    const session = await getActiveSession();
 
-    if (error || !session) {
+    if (!session) {
       window.location.href = 'login.html';
       return;
     }

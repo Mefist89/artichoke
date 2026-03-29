@@ -3,7 +3,7 @@
  * Загружает cart_items пользователя, позволяет менять кол-во,
  * удалять позиции и оформить заказ (placeOrder).
  */
-import { supabase, placeOrder } from './supabase.js';
+import { supabase, placeOrder, getActiveSession } from './supabase.js';
 
 const cartLoading = document.getElementById('cartLoading');
 const cartContent = document.getElementById('cartContent');
@@ -14,7 +14,7 @@ let userId    = null;
 
 // ── Загрузка сессии и корзины ──────────────────────────────
 async function init() {
-  const { data: { session } } = await supabase.auth.getSession();
+  const session = await getActiveSession();
 
   if (!session) {
     // Не авторизован — редирект

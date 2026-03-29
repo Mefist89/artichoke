@@ -61,7 +61,7 @@ function isGmailUser(user) {
   return typeof user?.email === "string" && user.email.toLowerCase().endsWith("@gmail.com");
 }
 
-async function getActiveSession() {
+export async function getActiveSession() {
   try {
     // Пробуем получить сессию через SDK с таймаутом 3с
     const timeoutResult = { data: { session: null }, error: null, timedOut: true };
