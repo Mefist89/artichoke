@@ -200,6 +200,49 @@ a {
   gap: 0.55rem;
 }
 
+.auth-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.auth-user-name {
+  max-width: 11rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 72%, #fff);
+  color: var(--primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.auth-link-btn {
+  padding: 0.65rem 0.95rem;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 68%, #fff);
+  color: var(--primary);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease, background-color 0.2s ease;
+}
+
+.auth-link-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.97);
+}
+
+.auth-logout-btn {
+  font-family: inherit;
+}
+
 .nav-toggle {
   display: none;
   width: 2.5rem;
@@ -621,12 +664,10 @@ html.dark .season-card {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    105deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.18) 50%,
-    transparent 100%
-  );
+  background: linear-gradient(105deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.18) 50%,
+      transparent 100%);
   transform: translateX(-130%);
   transition: transform 0.55s ease;
   pointer-events: none;
@@ -665,6 +706,7 @@ html.dark .season-card:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .season-card,
   .season-card img,
   .season-card::after,
@@ -729,7 +771,7 @@ html.dark .season-card:hover {
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.13);
 }
 
-.menu-block + .menu-block {
+.menu-block+.menu-block {
   margin-top: 1.5rem;
 }
 
@@ -845,6 +887,20 @@ html.dark .menu-item {
   color: #fff;
 }
 
+.add-to-cart-btn {
+  background-color: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: opacity 0.2s ease;
+}
+.add-to-cart-btn:hover {
+  opacity: 0.8;
+}
+
 .reviews {
   background: var(--beige);
 }
@@ -880,7 +936,7 @@ html.dark .review-card {
   gap: 0.7rem;
 }
 
-.review-author > span {
+.review-author>span {
   width: 2.4rem;
   height: 2.4rem;
   border-radius: 999px;
@@ -1022,7 +1078,7 @@ html.dark .contact-hero-card {
   text-transform: uppercase;
 }
 
-.contact-form-card > p {
+.contact-form-card>p {
   margin: 0.4rem 0 1rem;
   color: var(--muted);
 }
@@ -1120,6 +1176,66 @@ html.dark .contact-form textarea {
 
 .form-status.is-error {
   color: #c62828;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  margin: 1.2rem 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: color-mix(in srgb, var(--surface) 50%, transparent);
+}
+
+.auth-divider span {
+  padding: 0 0.8rem;
+}
+
+.google-auth-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--surface) 60%, transparent);
+  border-radius: 999px;
+  padding: 0.85rem 1.2rem;
+  background: color-mix(in srgb, var(--bg) 80%, transparent);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.google-auth-btn:hover {
+  background: color-mix(in srgb, var(--surface) 40%, transparent);
+  transform: translateY(-1px);
+}
+
+.google-icon {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+
+html.dark .google-auth-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+html.dark .google-auth-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .gallery-main {
@@ -1439,7 +1555,7 @@ html.dark .products-toolbar {
   scroll-margin-top: 6rem;
 }
 
-.products-category + .products-category {
+.products-category+.products-category {
   margin-top: 0.5rem;
 }
 
@@ -1451,7 +1567,7 @@ html.dark .products-toolbar {
   font-size: clamp(1.8rem, 4vw, 2.6rem);
 }
 
-.products-category > p {
+.products-category>p {
   margin: 0.35rem 0 1rem;
   color: var(--muted);
 }
@@ -1554,11 +1670,11 @@ html.dark .product-card {
   padding-bottom: clamp(1rem, 2.2vw, 2rem);
 }
 
-#servicii + .home-gallery {
+#servicii+.home-gallery {
   padding-top: clamp(1.1rem, 2.4vw, 2rem);
 }
 
-#servicii + .home-gallery + .reviews {
+#servicii+.home-gallery+.reviews {
   padding-top: clamp(1.1rem, 2.4vw, 2rem);
 }
 
@@ -1848,10 +1964,12 @@ html.dark .service-card {
 }
 
 @keyframes pin-bounce {
+
   0%,
   100% {
     transform: translate(-50%, -110%);
   }
+
   50% {
     transform: translate(-50%, -125%);
   }
@@ -2065,6 +2183,10 @@ html.dark .service-card {
     display: none;
   }
 
+  .auth-user-name {
+    max-width: 8rem;
+  }
+
   .nav-toggle {
     display: inline-flex;
   }
@@ -2252,6 +2374,19 @@ html.dark .service-card {
   .theme-toggle {
     width: 2.25rem;
     height: 2.25rem;
+  }
+
+  .auth-controls {
+    gap: 0.35rem;
+  }
+
+  .auth-user-name {
+    display: none;
+  }
+
+  .auth-link-btn {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.68rem;
   }
 
   .scroll-top-btn {
