@@ -22,7 +22,6 @@ export default function AddToCartButton({ product }) {
       .insert([
         { 
           user_id: session.user.id, 
-          product_id: product.id,
           product_name: product.name,
           price: product.price,
           quantity: 1

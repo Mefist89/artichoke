@@ -84,7 +84,6 @@ export default function CosPage() {
     // 2. Mută itemurile în order_items
     const orderItemsRecord = items.map(item => ({
       order_id: orderData.id,
-      product_id: item.product_id,
       product_name: item.product_name,
       price: item.price,
       quantity: item.quantity

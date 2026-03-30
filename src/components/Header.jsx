@@ -15,7 +15,7 @@ export default function Header() {
     // Încarcă starea temei din localStorage
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
-      document.body.classList.add('dark-mode');
+      document.documentElement.classList.add('dark');
       setTheme('dark');
     }
 
@@ -35,11 +35,11 @@ export default function Header() {
 
   const toggleTheme = () => {
     if (theme === 'light') {
-      document.body.classList.add('dark-mode');
+      document.documentElement.classList.add('dark');
       localStorage.setItem('theme', 'dark');
       setTheme('dark');
     } else {
-      document.body.classList.remove('dark-mode');
+      document.documentElement.classList.remove('dark');
       localStorage.setItem('theme', 'light');
       setTheme('light');
     }
