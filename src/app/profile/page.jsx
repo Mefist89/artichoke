@@ -1,10 +1,10 @@
 'use client';
 import { supabase } from '@/lib/supabase';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function ProfilePage() {
+function ProfileContent() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [orders, setOrders] = useState([]);
@@ -188,5 +188,19 @@ export default function ProfilePage() {
         </section>
       </main>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="page-wrapper">
+        <main className="contact-main header-padded">
+          <p style={{ textAlign: 'center', marginTop: '4rem' }}>Se încarcă profilul...</p>
+        </main>
+      </div>
+    }>
+      <ProfileContent />
+    </Suspense>
   );
 }
