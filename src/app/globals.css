@@ -3577,7 +3577,12 @@ html.dark .service-card {
 }
 
 .dashboard-table-card.is-occupied {
-  border-color: rgba(239, 108, 0, 0.34);
+  border-color: #7b4033;
+  box-shadow: 0 12px 28px rgba(112, 55, 42, 0.2);
+}
+
+.dashboard-table-card.is-free {
+  border-color: rgba(81, 120, 65, 0.3);
 }
 
 .dashboard-table-main {
@@ -3620,7 +3625,22 @@ html.dark .service-card {
 }
 
 .dashboard-table-card.is-occupied .dashboard-table-main {
-  background: linear-gradient(145deg, rgba(255, 183, 77, 0.13), transparent);
+  background: linear-gradient(145deg, #7b4033, #a8604b);
+  color: #fffaf5;
+}
+
+.dashboard-table-card.is-occupied .dashboard-table-main > span,
+.dashboard-table-card.is-occupied .dashboard-table-main > strong,
+.dashboard-table-card.is-occupied .dashboard-table-main > small {
+  color: #fffaf5;
+}
+
+.dashboard-table-card.is-occupied .dashboard-table-main > small {
+  opacity: 0.9;
+}
+
+.dashboard-table-card.is-free .dashboard-table-main {
+  background: linear-gradient(145deg, rgba(222, 235, 207, 0.76), rgba(244, 248, 237, 0.42));
 }
 
 .dashboard-table-meta {
@@ -4382,7 +4402,7 @@ body:has(.order-board-page) .scroll-top-btn {
 
 .table-order-products article {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: 5.25rem minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.8rem;
   border: 1px solid color-mix(in srgb, var(--primary) 11%, transparent);
@@ -4390,6 +4410,28 @@ body:has(.order-board-page) .scroll-top-btn {
   padding: 0.9rem;
   background: var(--card);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.045);
+}
+
+.table-order-product-image {
+  display: grid;
+  place-items: center;
+  width: 5.25rem;
+  height: 5.25rem;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--primary) 9%, var(--bg));
+}
+
+.table-order-product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.table-order-product-image > span {
+  color: color-mix(in srgb, var(--primary) 68%, var(--muted));
+  font-family: "Anton", sans-serif;
+  font-size: 2rem;
 }
 
 .table-order-products article.is-selected {
@@ -4804,6 +4846,21 @@ body:has(.order-board-page) .scroll-top-btn {
   .dashboard-table-grid,
   .table-order-receipt-actions {
     grid-template-columns: 1fr;
+  }
+
+  .table-order-products article {
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+  }
+
+  .table-order-product-image {
+    grid-row: 1 / span 2;
+    width: 4.5rem;
+    height: 4.5rem;
+  }
+
+  .table-order-quantity {
+    grid-column: 2;
+    justify-self: start;
   }
 
   .dashboard-table-main {
