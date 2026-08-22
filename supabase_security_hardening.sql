@@ -221,8 +221,8 @@ REVOKE ALL ON FUNCTION public.submit_reservation(TEXT, TEXT, DATE, TIME, INTEGER
 
 GRANT EXECUTE ON FUNCTION public.add_to_cart(TEXT, INTEGER) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.submit_contact_message(TEXT, TEXT, TEXT, TEXT)
-  TO anon, authenticated, service_role;
+  TO service_role;
 GRANT EXECUTE ON FUNCTION public.submit_reservation(TEXT, TEXT, DATE, TIME, INTEGER, TEXT, TEXT)
-  TO anon, authenticated, service_role;
+  TO service_role;
 
 COMMIT;

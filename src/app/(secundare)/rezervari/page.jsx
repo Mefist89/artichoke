@@ -1,11 +1,14 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import TurnstileWidget from '@/components/TurnstileWidget';
+import { submitPublicAction } from '@/lib/deviceId';
 
 export default function RezervariPage() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ text: '', type: '' });
   const dateInputRef = useRef(null);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
   useEffect(() => {
     const dateInput = dateInputRef.current;
@@ -41,30 +44,37 @@ export default function RezervariPage() {
       setLoading(false);
       return;
     }
-    const { error } = await supabase.rpc('submit_reservation', {
-      p_name: form.name.value,
-      p_phone: form.phone.value,
-      p_date: form.date.value,
-      p_time: form.time.value,
-      p_guests: Number(form.guests.value),
-      p_zone: form.zone.value,
-      p_message: form.message.value || null,
-    });
+    if (!turnstileToken) {
+      setStatus({ text: 'Confirmă verificarea anti-spam.', type: 'error' });
+      setLoading(false);
+      return;
+    }
 
-    if (error) {
-      console.error(error);
-      const rateLimited = error.message?.includes('Rate limit exceeded');
-      setStatus({
-        text: rateLimited
-          ? 'Ai trimis prea multe rezervări. Te rugăm să încerci mai târziu.'
-          : 'Eroare la trimitere. Încearcă din nou.',
-        type: 'error',
+    try {
+      await submitPublicAction('reservation', {
+        name: form.name.value,
+        phone: form.phone.value,
+        date: form.date.value,
+        time: form.time.value,
+        guests: Number(form.guests.value),
+        zone: form.zone.value,
+        message: form.message.value || null,
+        turnstileToken,
       });
-    } else {
       setStatus({ text: 'Rezervarea a fost trimisă cu succes!', type: 'success' });
       form.reset();
+    } catch (error) {
+      setStatus({
+        text: error.code === 'rate_limited'
+          ? 'Ai trimis prea multe rezervări. Te rugăm să încerci mai târziu.'
+          : error.message || 'Eroare la trimitere. Încearcă din nou.',
+        type: 'error',
+      });
+    } finally {
+      setTurnstileToken('');
+      setTurnstileResetKey((value) => value + 1);
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -182,6 +192,11 @@ export default function RezervariPage() {
                   Detalii suplimentare
                   <textarea name="message" rows="4" maxLength="1000" placeholder="Preferințe, ocazie specială, alergii..."></textarea>
                 </label>
+                <TurnstileWidget
+                  action="reservation_form"
+                  onTokenChange={setTurnstileToken}
+                  resetKey={turnstileResetKey}
+                />
                 <button type="submit" disabled={loading}>
                   {loading ? 'Se trimite...' : 'Trimite rezervarea'}
                 </button>

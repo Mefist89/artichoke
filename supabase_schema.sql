@@ -61,8 +61,20 @@ CREATE TABLE IF NOT EXISTS public.table_sessions (
   status       TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'closed')),
   opened_by    UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   opened_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  expires_at   TIMESTAMPTZ NOT NULL DEFAULT (now() + INTERVAL '2 hours'),
   closed_at    TIMESTAMPTZ
 );
+
+ALTER TABLE public.table_sessions
+  ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;
+
+UPDATE public.table_sessions
+SET expires_at = opened_at + INTERVAL '2 hours'
+WHERE expires_at IS NULL;
+
+ALTER TABLE public.table_sessions
+  ALTER COLUMN expires_at SET DEFAULT (now() + INTERVAL '2 hours'),
+  ALTER COLUMN expires_at SET NOT NULL;
 
 CREATE TABLE IF NOT EXISTS public.orders (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -884,9 +896,9 @@ GRANT EXECUTE ON FUNCTION public.set_cart_item_quantity(UUID, INTEGER) TO authen
 GRANT EXECUTE ON FUNCTION public.remove_cart_item(UUID) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.checkout_cart(TEXT) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.submit_contact_message(TEXT, TEXT, TEXT, TEXT)
-  TO anon, authenticated, service_role;
+  TO service_role;
 GRANT EXECUTE ON FUNCTION public.submit_reservation(TEXT, TEXT, DATE, TIME, INTEGER, TEXT, TEXT)
-  TO anon, authenticated, service_role;
+  TO service_role;
 
 -- ─────────────────────────────────────────────────────────────
 -- 6. Indecși

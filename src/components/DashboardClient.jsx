@@ -54,6 +54,14 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
+function formatTime(value) {
+  if (!value) return '—';
+  return new Intl.DateTimeFormat('ro-MD', {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(value));
+}
+
 function toLocalDateKey(value) {
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return '';
@@ -141,6 +149,7 @@ export default function DashboardClient() {
   const [orders, setOrders] = useState([]);
   const [tables, setTables] = useState([]);
   const [reservations, setReservations] = useState([]);
+  const [securityEvents, setSecurityEvents] = useState([]);
   const [productForm, setProductForm] = useState(EMPTY_PRODUCT);
   const [editingId, setEditingId] = useState('');
   const [reportMode, setReportMode] = useState('day');
@@ -175,7 +184,8 @@ export default function DashboardClient() {
       return;
     }
 
-    const [productsResult, ordersResult, reservationsResult, tablesResult] = await Promise.all([
+    const securitySince = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const [productsResult, ordersResult, reservationsResult, tablesResult, securityResult] = await Promise.all([
       supabase
         .from('products')
         .select('id,name,price,active,category,description,image,sort_order,updated_at')
@@ -191,9 +201,16 @@ export default function DashboardClient() {
         .order('reservation_date', { ascending: false })
         .order('reservation_time', { ascending: false }),
       supabase.rpc('admin_get_tables'),
+      supabase
+        .from('security_events')
+        .select('id,action,outcome,reason,created_at')
+        .in('outcome', ['blocked', 'turnstile_failed'])
+        .gte('created_at', securitySince)
+        .order('created_at', { ascending: false })
+        .limit(30),
     ]);
 
-    const firstError = [productsResult, ordersResult, reservationsResult, tablesResult]
+    const firstError = [productsResult, ordersResult, reservationsResult, tablesResult, securityResult]
       .find((result) => result.error)?.error;
     if (firstError) {
       setErrorMessage('Datele nu au putut fi încărcate. Verifică schema și încearcă din nou.');
@@ -202,6 +219,7 @@ export default function DashboardClient() {
       setOrders(ordersResult.data || []);
       setReservations(reservationsResult.data || []);
       setTables(tablesResult.data || []);
+      setSecurityEvents(securityResult.data || []);
     }
     setLoading(false);
   }, [router]);
@@ -210,6 +228,8 @@ export default function DashboardClient() {
     // Citirea inițială sincronizează interfața cu sesiunea și baza externă.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadDashboard();
+    const refreshTimer = window.setInterval(loadDashboard, 60_000);
+    return () => window.clearInterval(refreshTimer);
   }, [loadDashboard]);
 
   useEffect(() => {
@@ -226,6 +246,24 @@ export default function DashboardClient() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSiteOrigin(window.location.origin);
   }, []);
+
+  useEffect(() => {
+    if (!qrTable?.expires_at) return undefined;
+    const remaining = new Date(qrTable.expires_at).getTime() - Date.now();
+    if (remaining <= 0) {
+      const expiredTimer = window.setTimeout(() => {
+        setQrTable(null);
+        setNotice('Sesiunea QR a expirat. Deschide o sesiune nouă pentru masă.');
+      }, 0);
+      return () => window.clearTimeout(expiredTimer);
+    }
+
+    const expiryTimer = window.setTimeout(() => {
+      setQrTable(null);
+      setNotice('Sesiunea QR a expirat. Deschide o sesiune nouă pentru masă.');
+    }, remaining);
+    return () => window.clearTimeout(expiryTimer);
+  }, [qrTable]);
 
   const reportOrders = useMemo(() => {
     const startDate = reportMode === 'day' ? reportDay : reportStart;
@@ -385,8 +423,39 @@ export default function DashboardClient() {
     if (error || !data?.[0]?.token) {
       setErrorMessage('Sesiunea mesei nu a putut fi deschisă. Verifică migrarea Supabase.');
     } else {
-      setQrTable({ table_number: tableNumber, token: data[0].token });
+      setQrTable({
+        table_number: tableNumber,
+        token: data[0].token,
+        opened_at: data[0].opened_at,
+        expires_at: data[0].expires_at,
+      });
       setNotice(`Sesiunea pentru masa ${tableNumber} este activă.`);
+      await loadDashboard();
+    }
+    setBusyId('');
+  };
+
+  const rotateTableSession = async (tableNumber) => {
+    if (!window.confirm(`Creezi un QR nou pentru masa ${tableNumber}? Codul vechi nu va mai funcționa.`)) return;
+
+    setBusyId(`table-${tableNumber}`);
+    setErrorMessage('');
+    setNotice('');
+
+    const { data, error } = await supabase.rpc('admin_rotate_table_session', {
+      p_table_number: tableNumber,
+    });
+
+    if (error || !data?.[0]?.token) {
+      setErrorMessage('Codul QR nu a putut fi înlocuit. Sesiunea poate fi expirată.');
+    } else {
+      setQrTable({
+        table_number: tableNumber,
+        token: data[0].token,
+        opened_at: data[0].opened_at,
+        expires_at: data[0].expires_at,
+      });
+      setNotice(`A fost creat un QR nou pentru masa ${tableNumber}.`);
       await loadDashboard();
     }
     setBusyId('');
@@ -478,6 +547,22 @@ export default function DashboardClient() {
 
         {errorMessage && <p className="form-status is-error" role="alert">{errorMessage}</p>}
         {notice && <p className="form-status is-success" role="status">{notice}</p>}
+        {securityEvents.length > 0 && (
+          <details className="dashboard-security-alert">
+            <summary>
+              Activitate suspectă detectată
+              <span>{securityEvents.length} încercări blocate în ultimele 24 de ore</span>
+            </summary>
+            <ul>
+              {securityEvents.slice(0, 10).map((event) => (
+                <li key={event.id}>
+                  <strong>{event.action === 'table_order' ? 'Comandă QR' : event.action === 'reservation' ? 'Rezervare' : 'Contact'}</strong>
+                  <span>{event.outcome === 'turnstile_failed' ? 'Verificare anti-spam eșuată' : 'Limită de frecvență depășită'} · {formatDate(event.created_at)}</span>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
 
         <div className="dashboard-tabs" role="tablist" aria-label="Secțiuni administrare">
           {TABS.map(([id, label]) => (
@@ -667,12 +752,22 @@ export default function DashboardClient() {
                       className="dashboard-table-main"
                       disabled={isBusy}
                       onClick={() => isActive
-                        ? setQrTable({ table_number: table.table_number, token: table.token })
+                        ? setQrTable({
+                          table_number: table.table_number,
+                          token: table.token,
+                          opened_at: table.opened_at,
+                          expires_at: table.expires_at,
+                        })
                         : openTableSession(table.table_number)}
                     >
                       <span>Masa</span>
                       <strong>{table.table_number}</strong>
                       <small>{isActive ? 'Sesiune activă · Vezi QR' : 'Liberă · Deschide sesiunea'}</small>
+                      {isActive && (
+                        <time className="dashboard-table-session-time" dateTime={table.expires_at}>
+                          Deschisă {formatTime(table.opened_at)} · expiră {formatTime(table.expires_at)}
+                        </time>
+                      )}
                     </button>
 
                     <div className="dashboard-table-meta">
@@ -681,14 +776,12 @@ export default function DashboardClient() {
                     </div>
 
                     {isActive && (
-                      <button
-                        type="button"
-                        className="dashboard-table-close"
-                        disabled={isBusy}
-                        onClick={() => closeTableSession(table.table_number)}
-                      >
-                        {isBusy ? 'Se procesează…' : 'Închide sesiunea'}
-                      </button>
+                      <div className="dashboard-table-actions">
+                        <button type="button" className="dashboard-table-rotate" disabled={isBusy} onClick={() => rotateTableSession(table.table_number)}>QR nou</button>
+                        <button type="button" className="dashboard-table-close" disabled={isBusy} onClick={() => closeTableSession(table.table_number)}>
+                          {isBusy ? 'Se procesează…' : 'Închide sesiunea'}
+                        </button>
+                      </div>
                     )}
                   </article>
                 );
@@ -835,12 +928,18 @@ export default function DashboardClient() {
             <p>Masa</p>
             <h2 id="table-qr-title">{qrTable.table_number}</h2>
             <span>Clientul scanează codul pentru a comanda.</span>
+            <time className="dashboard-qr-expiry" dateTime={qrTable.expires_at}>
+              Deschisă la {formatTime(qrTable.opened_at)} · valabilă până la {formatTime(qrTable.expires_at)}
+            </time>
             {tableQrUrl && (
               <div className="dashboard-qr-code">
                 <QRCodeSVG value={tableQrUrl} size={260} level="M" marginSize={2} title={`Comandă la masa ${qrTable.table_number}`} />
               </div>
             )}
-            <button type="button" className="dashboard-secondary" onClick={copyTableLink}>Copiază linkul</button>
+            <div className="dashboard-qr-actions">
+              <button type="button" className="dashboard-secondary" onClick={copyTableLink}>Copiază linkul</button>
+              <button type="button" className="dashboard-secondary is-warning" onClick={() => rotateTableSession(qrTable.table_number)}>QR nou</button>
+            </div>
           </section>
         </div>
       )}

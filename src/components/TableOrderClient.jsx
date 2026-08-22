@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
+import { submitPublicAction } from '@/lib/deviceId';
+import TurnstileWidget from '@/components/TurnstileWidget';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -24,6 +26,9 @@ export default function TableOrderClient({ token }) {
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [receipt, setReceipt] = useState(null);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+  const [humanVerified, setHumanVerified] = useState(false);
   const requestIdRef = useRef(null);
 
   const loadMenu = useCallback(async () => {
@@ -55,8 +60,6 @@ export default function TableOrderClient({ token }) {
   }, [token]);
 
   useEffect(() => {
-    // Încărcarea pornește după hidratarea componentei client.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadMenu();
   }, [loadMenu]);
 
@@ -89,6 +92,11 @@ export default function TableOrderClient({ token }) {
 
     setSubmitting(true);
     setErrorMessage('');
+    if (!humanVerified && !turnstileToken) {
+      setErrorMessage('Confirmă verificarea anti-spam înainte de a trimite prima comandă.');
+      setSubmitting(false);
+      return;
+    }
     if (!requestIdRef.current) requestIdRef.current = crypto.randomUUID();
 
     const orderSnapshot = cartRows.map((product) => ({
@@ -98,29 +106,39 @@ export default function TableOrderClient({ token }) {
       quantity: product.quantity,
     }));
 
-    const { data, error } = await supabase.rpc('submit_table_order', {
-      p_token: token,
-      p_request_id: requestIdRef.current,
-      p_items: orderSnapshot.map(({ product_id: productId, quantity }) => ({
-        product_id: productId,
-        quantity,
-      })),
-      p_notes: notes.trim() || null,
-    });
+    try {
+      const data = await submitPublicAction('table-order', {
+        token,
+        requestId: requestIdRef.current,
+        items: orderSnapshot.map(({ product_id: productId, quantity }) => ({
+          product_id: productId,
+          quantity,
+        })),
+        notes: notes.trim() || null,
+        turnstileToken,
+      });
+      if (!data?.[0]) throw new Error('submission_failed');
 
-    if (error || !data?.[0]) {
-      setErrorMessage('Comanda nu a putut fi trimisă. Verifică sesiunea și încearcă din nou.');
-    } else {
       setReceipt({
         orderNumber: data[0].order_number,
         total: Number(data[0].total),
         items: orderSnapshot,
       });
+      setHumanVerified(true);
       setQuantities({});
       setNotes('');
       requestIdRef.current = null;
+    } catch (error) {
+      setErrorMessage(error.code === 'rate_limited'
+        ? 'Au fost trimise prea multe comenzi. Solicită ajutorul personalului.'
+        : error.message || 'Comanda nu a putut fi trimisă. Verifică sesiunea și încearcă din nou.');
+    } finally {
+      if (!humanVerified) {
+        setTurnstileToken('');
+        setTurnstileResetKey((value) => value + 1);
+      }
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
   const groupedProducts = useMemo(() => products.reduce((groups, product) => {
@@ -255,6 +273,13 @@ export default function TableOrderClient({ token }) {
             />
           </label>
           <div className="table-order-total"><span>Total</span><strong>{estimatedTotal.toFixed(2)} MDL</strong></div>
+          {!humanVerified && (
+            <TurnstileWidget
+              action="table_order"
+              onTokenChange={setTurnstileToken}
+              resetKey={turnstileResetKey}
+            />
+          )}
           <button type="submit" disabled={cartRows.length === 0 || submitting}>
             {submitting ? 'Se trimite…' : 'Trimite comanda'}
           </button>

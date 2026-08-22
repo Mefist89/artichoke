@@ -1,10 +1,13 @@
 'use client';
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import TurnstileWidget from '@/components/TurnstileWidget';
+import { submitPublicAction } from '@/lib/deviceId';
 
 export default function ContactPage() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ text: '', type: '' });
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,27 +20,34 @@ export default function ContactPage() {
       setLoading(false);
       return;
     }
-    const { error } = await supabase.rpc('submit_contact_message', {
-      p_name: form.name.value,
-      p_email: form.email.value,
-      p_subject: form.subject.value,
-      p_message: form.message.value,
-    });
+    if (!turnstileToken) {
+      setStatus({ text: 'Confirmă verificarea anti-spam.', type: 'error' });
+      setLoading(false);
+      return;
+    }
 
-    if (error) {
-      console.error(error);
-      const rateLimited = error.message?.includes('Rate limit exceeded');
-      setStatus({
-        text: rateLimited
-          ? 'Ai trimis prea multe mesaje. Te rugăm să încerci mai târziu.'
-          : 'Eroare la trimitere. Încearcă din nou.',
-        type: 'error',
+    try {
+      await submitPublicAction('contact', {
+        name: form.name.value,
+        email: form.email.value,
+        subject: form.subject.value,
+        message: form.message.value,
+        turnstileToken,
       });
-    } else {
       setStatus({ text: 'Mesajul a fost trimis cu succes!', type: 'success' });
       form.reset();
+    } catch (error) {
+      setStatus({
+        text: error.code === 'rate_limited'
+          ? 'Ai trimis prea multe mesaje. Te rugăm să încerci mai târziu.'
+          : error.message || 'Eroare la trimitere. Încearcă din nou.',
+        type: 'error',
+      });
+    } finally {
+      setTurnstileToken('');
+      setTurnstileResetKey((value) => value + 1);
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -142,6 +152,11 @@ export default function ContactPage() {
                   Mesaj
                   <textarea name="message" rows="5" placeholder="Scrie mesajul tău..." minLength="10" maxLength="2000" required></textarea>
                 </label>
+                <TurnstileWidget
+                  action="contact_form"
+                  onTokenChange={setTurnstileToken}
+                  resetKey={turnstileResetKey}
+                />
                 <button type="submit" disabled={loading}>
                   {loading ? 'Se trimite...' : 'Trimite'}
                 </button>
