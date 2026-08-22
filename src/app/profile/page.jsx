@@ -4,10 +4,24 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
+const ORDER_STATUSES = {
+  pending: { label: 'În așteptare', background: '#fff3cd', color: '#856404' },
+  processing: { label: 'În procesare', background: '#dbeafe', color: '#1e40af' },
+  completed: { label: 'Finalizată', background: '#d4edda', color: '#155724' },
+  cancelled: { label: 'Anulată', background: '#fde2e2', color: '#9b1c1c' },
+};
+
+const UNKNOWN_ORDER_STATUS = {
+  label: 'Stare necunoscută',
+  background: '#e9ecef',
+  color: '#495057',
+};
+
 function ProfileContent() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [orders, setOrders] = useState([]);
+  const [loadError, setLoadError] = useState('');
   
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -15,34 +29,36 @@ function ProfileContent() {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        router.push('/login');
-        return;
-      }
-      
-      setUser(session.user);
+      try {
+        setLoadError('');
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
 
-      // Fetch Orders
-      const { data: ordersData, error } = await supabase
-        .from('orders')
-        .select(`
-          id, total, status, created_at, notes,
-          order_items (
-            product_name, quantity, price
-          )
-        `)
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false });
+        if (!session) {
+          router.push('/login');
+          return;
+        }
 
-      if (error) {
-        console.error('Error fetching orders:', error);
-      } else {
+        setUser(session.user);
+        const { data: ordersData, error } = await supabase
+          .from('orders')
+          .select(`
+            id, total, status, created_at, notes,
+            order_items (
+              product_name, quantity, price
+            )
+          `)
+          .eq('user_id', session.user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
         setOrders(ordersData || []);
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        setLoadError('Istoricul comenzilor nu a putut fi încărcat. Verifică conexiunea și încearcă din nou.');
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
 
     fetchProfile();
@@ -56,16 +72,16 @@ function ProfileContent() {
   if (loading) {
     return (
       <div className="page-wrapper">
-        <main className="contact-main header-padded">
+        <div className="contact-main header-padded">
           <p style={{ textAlign: 'center', marginTop: '4rem' }}>Se încarcă profilul...</p>
-        </main>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="page-wrapper">
-      <main className="contact-main header-padded">
+      <div className="contact-main header-padded">
         
         {isOrderSuccess && (
           <div style={{ background: '#d4edda', color: '#155724', padding: '1rem', textAlign: 'center', marginBottom: '1rem', borderBottom: '1px solid #c3e6cb' }}>
@@ -142,21 +158,31 @@ function ProfileContent() {
               <p>Vezi comenzile tale anterioare și starea acestora.</p>
 
               <div className="contact-form">
-                {orders.length === 0 ? (
+                {loadError ? (
+                  <div className="form-status is-error" role="alert">
+                    <p>{loadError}</p>
+                    <button type="button" className="home-gallery-link" onClick={() => window.location.reload()}>
+                      Încearcă din nou
+                    </button>
+                  </div>
+                ) : orders.length === 0 ? (
                   <p>Nu ai plasat nicio comandă până acum.</p>
                 ) : (
-                  orders.map(order => (
+                  orders.map(order => {
+                    const orderStatus = ORDER_STATUSES[order.status] || UNKNOWN_ORDER_STATUS;
+
+                    return (
                     <div key={order.id} style={{ border: '1px solid #ddd', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                         <strong>Comanda #{order.id.split('-')[0]}</strong>
                         <span style={{ 
-                          background: order.status === 'pending' ? '#fff3cd' : '#d4edda', 
-                          color: order.status === 'pending' ? '#856404' : '#155724',
+                          background: orderStatus.background,
+                          color: orderStatus.color,
                           padding: '0.2rem 0.5rem', 
                           borderRadius: '4px',
                           fontSize: '0.85rem'
                         }}>
-                          {order.status === 'pending' ? 'În așteptare' : 'Confirmat'}
+                          {orderStatus.label}
                         </span>
                       </div>
                       <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '1rem' }}>
@@ -180,13 +206,14 @@ function ProfileContent() {
                         <p style={{ marginTop: '0.5rem', fontSize: '0.85rem', fontStyle: 'italic', color: '#555' }}>Notă: {order.notes}</p>
                       )}
                     </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </article>
           </div>
         </section>
-      </main>
+      </div>
     </div>
   );
 }
@@ -195,9 +222,9 @@ export default function ProfilePage() {
   return (
     <Suspense fallback={
       <div className="page-wrapper">
-        <main className="contact-main header-padded">
+        <div className="contact-main header-padded">
           <p style={{ textAlign: 'center', marginTop: '4rem' }}>Se încarcă profilul...</p>
-        </main>
+        </div>
       </div>
     }>
       <ProfileContent />

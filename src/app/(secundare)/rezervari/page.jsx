@@ -1,10 +1,34 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
 export default function RezervariPage() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ text: '', type: '' });
+  const dateInputRef = useRef(null);
+
+  useEffect(() => {
+    const dateInput = dateInputRef.current;
+    if (!dateInput) return;
+
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/Chisinau',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(new Date());
+    const getPart = (type) => parts.find((part) => part.type === type)?.value;
+    const year = Number(getPart('year'));
+    const month = Number(getPart('month'));
+    const day = Number(getPart('day'));
+    const today = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const lastAvailableDate = new Date(Date.UTC(year, month - 1, day + 365))
+      .toISOString()
+      .slice(0, 10);
+
+    dateInput.min = today;
+    dateInput.max = lastAvailableDate;
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -12,21 +36,30 @@ export default function RezervariPage() {
     setStatus({ text: 'Se trimite...', type: 'info' });
 
     const form = e.target;
-    const data = {
-      name: form.name.value,
-      phone: form.phone.value,
-      date: form.date.value,
-      time: form.time.value,
-      guests: form.guests.value,
-      zone: form.zone.value,
-      message: form.message.value,
-    };
-
-    const { error } = await supabase.from('reservations').insert([data]);
+    if (form.website.value) {
+      setStatus({ text: 'Rezervarea a fost trimisă cu succes!', type: 'success' });
+      setLoading(false);
+      return;
+    }
+    const { error } = await supabase.rpc('submit_reservation', {
+      p_name: form.name.value,
+      p_phone: form.phone.value,
+      p_date: form.date.value,
+      p_time: form.time.value,
+      p_guests: Number(form.guests.value),
+      p_zone: form.zone.value,
+      p_message: form.message.value || null,
+    });
 
     if (error) {
       console.error(error);
-      setStatus({ text: 'Eroare la trimitere. Încearcă din nou.', type: 'error' });
+      const rateLimited = error.message?.includes('Rate limit exceeded');
+      setStatus({
+        text: rateLimited
+          ? 'Ai trimis prea multe rezervări. Te rugăm să încerci mai târziu.'
+          : 'Eroare la trimitere. Încearcă din nou.',
+        type: 'error',
+      });
     } else {
       setStatus({ text: 'Rezervarea a fost trimisă cu succes!', type: 'success' });
       form.reset();
@@ -36,7 +69,7 @@ export default function RezervariPage() {
 
   return (
     <div className="page-wrapper">
-      <main className="contact-main header-padded">
+      <div className="contact-main header-padded">
         <section className="section contact-hero">
           <div className="container">
             <div className="contact-hero-card">
@@ -107,30 +140,34 @@ export default function RezervariPage() {
                 Te rugăm să introduci datele corecte pentru a putea confirma masa.
               </p>
               <form className="contact-form" onSubmit={handleSubmit}>
+                <label className="form-honeypot" aria-hidden="true">
+                  Website
+                  <input type="text" name="website" tabIndex="-1" autoComplete="off" />
+                </label>
                 <div className="contact-form-row">
                   <label>
                     Nume
-                    <input type="text" name="name" placeholder="Ion Popescu" required />
+                    <input type="text" name="name" placeholder="Ion Popescu" minLength="2" maxLength="100" required />
                   </label>
                   <label>
                     Telefon
-                    <input type="tel" name="phone" placeholder="+373 XX XXX XXX" required />
+                    <input type="tel" name="phone" placeholder="+373 XX XXX XXX" minLength="6" maxLength="30" required />
                   </label>
                 </div>
                 <div className="contact-form-row">
                   <label>
                     Data
-                    <input type="date" name="date" required />
+                    <input ref={dateInputRef} type="date" name="date" required />
                   </label>
                   <label>
                     Ora
-                    <input type="time" name="time" required />
+                    <input type="time" name="time" min="09:00" max="22:00" required />
                   </label>
                 </div>
                 <div className="contact-form-row">
                   <label>
                     Număr persoane
-                    <input type="number" name="guests" min="1" max="12" defaultValue="2" required />
+                    <input type="number" name="guests" min="2" max="12" defaultValue="2" required />
                   </label>
                   <label>
                     Zonă
@@ -143,7 +180,7 @@ export default function RezervariPage() {
                 </div>
                 <label>
                   Detalii suplimentare
-                  <textarea name="message" rows="4" placeholder="Preferințe, ocazie specială, alergii..."></textarea>
+                  <textarea name="message" rows="4" maxLength="1000" placeholder="Preferințe, ocazie specială, alergii..."></textarea>
                 </label>
                 <button type="submit" disabled={loading}>
                   {loading ? 'Se trimite...' : 'Trimite rezervarea'}
@@ -157,7 +194,7 @@ export default function RezervariPage() {
             </article>
           </div>
         </section>
-      </main>
+      </div>
     </div>
   );
 }

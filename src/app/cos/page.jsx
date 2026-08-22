@@ -1,108 +1,149 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function CosPage() {
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [items, setItems] = useState([]);
   const [notes, setNotes] = useState('');
   const [isOrdering, setIsOrdering] = useState(false);
-  const [user, setUser] = useState(null);
+  const [updatingItemId, setUpdatingItemId] = useState(null);
+  const operationInFlight = useRef(false);
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchSessionAndCart = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push('/login');
-        return;
-      }
-      setUser(session.user);
-      
-      const { data, error } = await supabase
-        .from('cart_items')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: true });
+  const loadCart = useCallback(async () => {
+    setLoadError('');
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
 
-      if (error) {
-        console.error('Eroare încărcare coș:', error);
-      } else {
-        setItems(data || []);
-      }
-      setLoading(false);
-    };
+    if (sessionError) throw sessionError;
 
-    fetchSessionAndCart();
+    if (!session) {
+      router.replace('/login');
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('cart_items')
+      .select(`
+        id,
+        product_id,
+        quantity,
+        created_at,
+        products!inner (
+          name,
+          price
+        )
+      `)
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+
+    setItems((data || []).map(item => ({
+      id: item.id,
+      product_id: item.product_id,
+      product_name: item.products.name,
+      price: Number(item.products.price),
+      quantity: item.quantity,
+      created_at: item.created_at,
+    })));
   }, [router]);
 
+  useEffect(() => {
+    loadCart()
+      .catch((error) => {
+        console.error('Eroare încărcare coș:', error);
+        setLoadError('Coșul nu a putut fi încărcat. Verifică conexiunea și încearcă din nou.');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [loadCart]);
+
   const updateQuantity = async (id, delta) => {
+    if (operationInFlight.current) return;
+
     const item = items.find(i => i.id === id);
     if (!item) return;
-    
+
     const newQty = item.quantity + delta;
-    if (newQty < 1) return;
+    if (newQty < 1 || newQty > 99) return;
 
-    // Optimistic update
-    setItems(items.map(i => i.id === id ? { ...i, quantity: newQty } : i));
+    operationInFlight.current = true;
+    setUpdatingItemId(id);
+    try {
+      const { error } = await supabase.rpc('set_cart_item_quantity', {
+        p_cart_item_id: id,
+        p_quantity: newQty,
+      });
 
-    await supabase
-      .from('cart_items')
-      .update({ quantity: newQty })
-      .eq('id', id);
+      if (error) throw error;
+      await loadCart();
+    } catch (error) {
+      console.error('Eroare actualizare coș:', error);
+      await loadCart().catch((syncError) => {
+        console.error('Eroare resincronizare coș:', syncError);
+      });
+      alert('Cantitatea nu a putut fi actualizată. Coșul a fost resincronizat.');
+    } finally {
+      operationInFlight.current = false;
+      setUpdatingItemId(null);
+    }
   };
 
   const removeItem = async (id) => {
-    setItems(items.filter(i => i.id !== id));
-    await supabase
-      .from('cart_items')
-      .delete()
-      .eq('id', id);
+    if (operationInFlight.current) return;
+
+    operationInFlight.current = true;
+    setUpdatingItemId(id);
+    try {
+      const { error } = await supabase.rpc('remove_cart_item', {
+        p_cart_item_id: id,
+      });
+
+      if (error) throw error;
+      await loadCart();
+    } catch (error) {
+      console.error('Eroare ștergere produs:', error);
+      await loadCart().catch((syncError) => {
+        console.error('Eroare resincronizare coș:', syncError);
+      });
+      alert('Produsul nu a putut fi șters. Coșul a fost resincronizat.');
+    } finally {
+      operationInFlight.current = false;
+      setUpdatingItemId(null);
+    }
   };
 
   const handleCheckout = async () => {
-    if (items.length === 0) return;
+    if (items.length === 0 || operationInFlight.current) return;
+
+    operationInFlight.current = true;
     setIsOrdering(true);
 
-    const total = items.reduce((acc, i) => acc + (i.price * i.quantity), 0);
-
-    // 1. Creează comanda
-    const { data: orderData, error: orderError } = await supabase
-      .from('orders')
-      .insert([{ user_id: user.id, total, notes, status: 'pending' }])
-      .select()
-      .single();
+    // Funcția SQL recitește produsele și prețurile canonice și creează
+    // comanda, pozițiile și golirea coșului într-o singură tranzacție.
+    const { error: orderError } = await supabase.rpc('checkout_cart', {
+      p_notes: notes.trim() || null,
+    });
 
     if (orderError) {
-      alert('Eroare la crearea comenzii: ' + orderError.message);
+      console.error('Eroare creare comandă:', orderError);
+      await loadCart().catch((syncError) => {
+        console.error('Eroare resincronizare coș:', syncError);
+      });
+      alert('Comanda nu a putut fi creată. Verifică produsele din coș și încearcă din nou.');
+      operationInFlight.current = false;
       setIsOrdering(false);
       return;
     }
 
-    // 2. Mută itemurile în order_items
-    const orderItemsRecord = items.map(item => ({
-      order_id: orderData.id,
-      product_name: item.product_name,
-      price: item.price,
-      quantity: item.quantity
-    }));
-
-    const { error: itemsError } = await supabase
-      .from('order_items')
-      .insert(orderItemsRecord);
-
-    if (itemsError) {
-      alert('Comanda a fost creată, dar a apărut o eroare la adăugarea produselor: ' + itemsError.message);
-      setIsOrdering(false);
-      return;
-    }
-
-    // 3. Golește coșul
-    await supabase.from('cart_items').delete().eq('user_id', user.id);
-
-    // 4. Redirecționează către profil
     router.push('/profile?order=success');
   };
 
@@ -111,25 +152,39 @@ export default function CosPage() {
   if (loading) {
     return (
       <div className="page-wrapper">
-        <main className="main-content header-padded">
+        <div className="main-content header-padded">
           <section className="section bg-light" id="cos-section">
             <div className="container form-container">
               <p style={{ textAlign: 'center' }}>Se încarcă coșul...</p>
             </div>
           </section>
-        </main>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="page-wrapper">
-      <main className="main-content header-padded">
+      <div className="main-content header-padded">
         <section className="section bg-light" id="cos-section">
           <div className="container form-container" style={{ maxWidth: '800px' }}>
             <h1 className="display-title products-title" style={{ textAlign: 'center', marginBottom: '2rem' }}>Coșul Meu</h1>
 
-            {items.length === 0 ? (
+            {loadError ? (
+              <div className="cart-empty" role="alert">
+                <span className="material-icons-outlined">cloud_off</span>
+                <p>{loadError}</p>
+                <button type="button" className="book-btn" onClick={() => {
+                  setLoading(true);
+                  loadCart()
+                    .catch((error) => {
+                      console.error('Eroare reîncărcare coș:', error);
+                      setLoadError('Coșul nu a putut fi încărcat. Verifică conexiunea și încearcă din nou.');
+                    })
+                    .finally(() => setLoading(false));
+                }}>Încearcă din nou</button>
+              </div>
+            ) : items.length === 0 ? (
               <div className="cart-empty">
                 <span className="material-icons-outlined">shopping_cart</span>
                 <p>Coșul tău este gol.</p>
@@ -155,14 +210,14 @@ export default function CosPage() {
                           <td className="product-price">{item.price} MDL</td>
                           <td>
                             <div className="qty-control">
-                              <button className="qty-btn" onClick={() => updateQuantity(item.id, -1)} disabled={item.quantity <= 1}>-</button>
+                              <button className="qty-btn" onClick={() => updateQuantity(item.id, -1)} disabled={item.quantity <= 1 || updatingItemId !== null || isOrdering}>-</button>
                               <span className="qty-value">{item.quantity}</span>
-                              <button className="qty-btn" onClick={() => updateQuantity(item.id, 1)}>+</button>
+                              <button className="qty-btn" onClick={() => updateQuantity(item.id, 1)} disabled={item.quantity >= 99 || updatingItemId !== null || isOrdering}>+</button>
                             </div>
                           </td>
                           <td className="product-price">{(item.price * item.quantity).toFixed(2)} MDL</td>
                           <td>
-                            <button className="remove-btn" onClick={() => removeItem(item.id)} aria-label="Șterge produsul">
+                            <button className="remove-btn" onClick={() => removeItem(item.id)} disabled={updatingItemId !== null || isOrdering} aria-label="Șterge produsul">
                               <span className="material-icons-outlined">delete</span>
                             </button>
                           </td>
@@ -177,6 +232,7 @@ export default function CosPage() {
                     placeholder="Notițe pentru comandă (opțional)..." 
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
+                    maxLength={1000}
                   ></textarea>
                 </div>
 
@@ -189,7 +245,7 @@ export default function CosPage() {
                   <button 
                     className="checkout-btn" 
                     id="checkoutBtn" 
-                    disabled={isOrdering}
+                    disabled={isOrdering || updatingItemId !== null}
                     onClick={handleCheckout}
                   >
                     {isOrdering ? 'Se plasează...' : (
@@ -204,7 +260,7 @@ export default function CosPage() {
             )}
           </div>
         </section>
-      </main>
+      </div>
       
       <style jsx global>{`
         .cart-empty { text-align: center; padding: 3rem 1rem; color: var(--text-muted, #888); }

@@ -1,19 +1,13 @@
 import Link from 'next/link';
+import Image from 'next/image';
+import HeroSlider from '@/components/HeroSlider';
 
 export default function Home() {
   return (
     <>
       <section className="section about" id="about">
         <div className="container about-grid">
-          <div className="about-slider" aria-label="Fotografii din cafenea">
-            <img
-              className="slide is-active"
-              src="/img/slider/slider-1.jpg"
-              alt="Interior confortabil de cafenea"
-            />
-            {/* Voi adauga un mic script de slider client-side mai tarziu */}
-            <div className="slider-dots" id="sliderDots" aria-label="Comutatoare slider"></div>
-          </div>
+          <HeroSlider />
 
           <div className="about-copy">
             <h1 className="display-title">DESPRE NOI</h1>
@@ -28,7 +22,7 @@ export default function Home() {
       </section>
 
       <section className="hero-strip" aria-label="Banner decorativ">
-        <img src="/img/bg/latte-hero.jpg" alt="Latte și croissante" />
+        <Image src="/img/bg/latte-hero.jpg" alt="Latte și croissante" width={2400} height={700} sizes="100vw" />
       </section>
 
       <section className="section seasonal" id="seasonal">
@@ -38,7 +32,7 @@ export default function Home() {
 
           <div className="seasonal-grid">
             <article className="season-card">
-              <img src="/img/oferte/latte-lavanda.jpg" alt="Latte cu lavandă" />
+              <Image src="/img/oferte/latte-lavanda.jpg" alt="Latte cu lavandă" width={900} height={900} sizes="(max-width: 640px) 100vw, 50vw" />
               <div className="season-card-text">
                 <h3>Latte cu lavandă</h3>
                 <p>Espresso fin cu sirop de lavandă de casă și spumă de lapte catifelată.</p>
@@ -47,7 +41,7 @@ export default function Home() {
             </article>
 
             <article className="season-card">
-              <img src="/img/oferte/latte-dovleac.jpg" alt="Latte cu dovleac și condimente" />
+              <Image src="/img/oferte/latte-dovleac.jpg" alt="Latte cu dovleac și condimente" width={900} height={900} sizes="(max-width: 640px) 100vw, 50vw" />
               <div className="season-card-text">
                 <h3>Latte cu dovleac și condimente</h3>
                 <p>Băutură reconfortantă cu piure de dovleac, scorțișoară și nucșoară.</p>
@@ -75,25 +69,25 @@ export default function Home() {
             <h3>Cafea</h3>
             <div className="menu-grid">
               <article className="menu-item">
-                <img src="/img/cofe/cappuccino.jpg" alt="Cappuccino" />
+                <Image src="/img/cofe/cappuccino.jpg" alt="Cappuccino" width={700} height={700} sizes="(max-width: 640px) 100vw, 25vw" />
                 <h4>Cappuccino</h4>
                 <p>cu artă latte</p>
                 <span>20 MDL</span>
               </article>
               <article className="menu-item">
-                <img src="/img/cofe/cacao.jpg" alt="Cacao" />
+                <Image src="/img/cofe/cacao.jpg" alt="Cacao" width={700} height={700} sizes="(max-width: 640px) 100vw, 25vw" />
                 <h4>Cacao</h4>
                 <p>cu spumă de lapte</p>
                 <span>20 MDL</span>
               </article>
               <article className="menu-item">
-                <img src="/img/cofe/espresso-macchiato.jpg" alt="Espresso macchiato" />
+                <Image src="/img/cofe/espresso-macchiato.jpg" alt="Espresso macchiato" width={700} height={700} sizes="(max-width: 640px) 100vw, 25vw" />
                 <h4>Espresso macchiato</h4>
                 <p>porție clasică</p>
                 <span>20 MDL</span>
               </article>
               <article className="menu-item">
-                <img src="/img/cofe/flat-white.jpg" alt="Flat white" />
+                <Image src="/img/cofe/flat-white.jpg" alt="Flat white" width={700} height={700} sizes="(max-width: 640px) 100vw, 25vw" />
                 <h4>Flat white</h4>
                 <p>pe espresso dublu</p>
                 <span>15 MDL</span>
@@ -105,25 +99,25 @@ export default function Home() {
             <h3>Băuturi cu lapte de MIGDALE</h3>
             <div className="menu-grid">
               <article className="menu-item">
-                <img src="/img/migdale/americano-migdale.jpg" alt="Americano cu lapte de migdale" />
+                <Image src="/img/migdale/americano-migdale.jpg" alt="Americano cu lapte de migdale" width={900} height={900} sizes="(max-width: 640px) 100vw, 25vw" />
                 <h4>Americano cu lapte de migdale</h4>
                 <p>Aromă echilibrată și textură delicată.</p>
                 <span>25 MDL</span>
               </article>
               <article className="menu-item">
-                <img src="/img/migdale/cappuccino-migdale.jpg" alt="Cappuccino cu lapte de migdale" />
+                <Image src="/img/migdale/cappuccino-migdale.jpg" alt="Cappuccino cu lapte de migdale" width={900} height={900} sizes="(max-width: 640px) 100vw, 25vw" />
                 <h4>Cappuccino cu lapte de migdale</h4>
                 <p>Spumă fină și gust cremos.</p>
                 <span>30 MDL</span>
               </article>
               <article className="menu-item">
-                <img src="/img/migdale/latte-migdale.jpg" alt="Latte cu lapte de migdale" />
+                <Image src="/img/migdale/latte-migdale.jpg" alt="Latte cu lapte de migdale" width={900} height={900} sizes="(max-width: 640px) 100vw, 25vw" />
                 <h4>Latte cu lapte de migdale</h4>
                 <p>Latte catifelat cu note dulci.</p>
                 <span>40 MDL</span>
               </article>
               <article className="menu-item">
-                <img src="/img/migdale/cacao-migdale.jpg" alt="Cacao cu lapte de migdale" />
+                <Image src="/img/migdale/cacao-migdale.jpg" alt="Cacao cu lapte de migdale" width={900} height={900} sizes="(max-width: 640px) 100vw, 25vw" />
                 <h4>Cacao cu lapte de migdale</h4>
                 <p>Cacao caldă și aromată.</p>
                 <span>30 MDL</span>
@@ -135,25 +129,25 @@ export default function Home() {
             <h3>Deserturi</h3>
             <div className="menu-grid dessert-grid">
               <article className="menu-item">
-                <img src="/img/deserti/cupcake.jpg" alt="Cupcake" />
+                <Image src="/img/deserti/cupcake.jpg" alt="Cupcake" width={900} height={900} sizes="(max-width: 640px) 100vw, 25vw" />
                 <h4>Cupcake</h4>
                 <p>cu cremă de ciocolată</p>
                 <span>40 MDL</span>
               </article>
               <article className="menu-item">
-                <img src="/img/deserti/donut.jpg" alt="Donut" />
+                <Image src="/img/deserti/donut.jpg" alt="Donut" width={900} height={900} sizes="(max-width: 640px) 100vw, 25vw" />
                 <h4>Donut</h4>
                 <p>cu glazură de căpșuni</p>
                 <span>35 MDL</span>
               </article>
               <article className="menu-item">
-                <img src="/img/deserti/tort-pandispan.jpg" alt="Tort pandișpan" />
+                <Image src="/img/deserti/tort-pandispan.jpg" alt="Tort pandișpan" width={900} height={900} sizes="(max-width: 640px) 100vw, 25vw" />
                 <h4>Tort pandișpan</h4>
                 <p>cu cremă fină</p>
                 <span>50 MDL</span>
               </article>
               <article className="menu-item">
-                <img src="/img/deserti/inghetata-spaghetti.jpg" alt="Înghețată" />
+                <Image src="/img/deserti/inghetata-spaghetti.jpg" alt="Înghețată" width={900} height={900} sizes="(max-width: 640px) 100vw, 25vw" />
                 <h4>Înghețată spaghetti</h4>
                 <p>desert cu înghețată</p>
                 <span>50 MDL</span>
@@ -200,7 +194,7 @@ export default function Home() {
           <h2 className="section-title">Galeria</h2>
           <div className="gallery-grid home-gallery-grid">
             <figure className="gallery-item">
-              <img src="/img/galeria/foto1.jpg" alt="Detalii din interiorul cafenelei" />
+              <Image src="/img/galeria/foto1.jpg" alt="Detalii din interiorul cafenelei" width={960} height={1280} sizes="(max-width: 640px) 100vw, 33vw" />
               <figcaption>
                 <h3>Relaxare</h3>
                 <p>Atmosferă caldă pentru pauze liniștite și momente plăcute.</p>
@@ -208,7 +202,7 @@ export default function Home() {
               </figcaption>
             </figure>
             <figure className="gallery-item">
-              <img src="/img/galeria/foto2.jpg" alt="Cafea servită pe masă" />
+              <Image src="/img/galeria/foto2.jpg" alt="Cafea servită pe masă" width={960} height={1280} sizes="(max-width: 640px) 100vw, 33vw" />
               <figcaption>
                 <h3>Cafea de autor</h3>
                 <p>Băuturi pregătite cu grijă, gust echilibrat și aromă intensă.</p>
@@ -216,7 +210,7 @@ export default function Home() {
               </figcaption>
             </figure>
             <figure className="gallery-item">
-              <img src="/img/galeria/foto3.jpg" alt="Colț cozy în PLAY ROOM ARTICHOKE" />
+              <Image src="/img/galeria/foto3.jpg" alt="Colț cozy în PLAY ROOM ARTICHOKE" width={1079} height={1168} sizes="(max-width: 640px) 100vw, 33vw" />
               <figcaption>
                 <h3>Ambianță</h3>
                 <p>Loc perfect pentru întâlniri cu prietenii sau timp pentru tine.</p>
