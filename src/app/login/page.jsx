@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
@@ -87,6 +88,7 @@ export default function LoginPage() {
                   </p>
                 )}
               </form>
+              <p className="login-help-link"><Link href="/forgot-password">Ai uitat parola?</Link></p>
             </article>
           </div>
         </section>

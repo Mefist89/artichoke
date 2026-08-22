@@ -1281,7 +1281,8 @@ html.dark .menu-item {
 
 .menu-item img {
   width: 100%;
-  aspect-ratio: 1;
+  height: clamp(160px, 18vw, 210px);
+  max-height: 210px;
   object-fit: cover;
   border-radius: 0.85rem;
 }
@@ -1632,6 +1633,21 @@ html.dark .contact-form textarea {
 
 .form-status.is-error {
   color: #c62828;
+}
+
+.login-container {
+  max-width: 520px;
+}
+
+.login-help-link {
+  margin: 1rem 0 0;
+  text-align: center;
+}
+
+.login-help-link a,
+.contact-form-card a {
+  color: var(--primary);
+  font-weight: 700;
 }
 
 .auth-divider {
@@ -2847,6 +2863,11 @@ html.dark .service-card {
   .menu-grid,
   .dessert-grid {
     grid-template-columns: 1fr;
+  }
+
+  .menu-item img {
+    height: 190px;
+    max-height: 190px;
   }
 
   .menu-item h4 {
