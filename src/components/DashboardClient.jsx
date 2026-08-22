@@ -101,6 +101,11 @@ export default function DashboardClient() {
   const [reportDay, setReportDay] = useState('');
   const [reportStart, setReportStart] = useState('');
   const [reportEnd, setReportEnd] = useState('');
+  const [manualProductId, setManualProductId] = useState('');
+  const [manualQuantity, setManualQuantity] = useState(1);
+  const [manualOrderItems, setManualOrderItems] = useState([]);
+  const [manualOrderNotes, setManualOrderNotes] = useState('');
+  const [creatingOrder, setCreatingOrder] = useState(false);
 
   const loadDashboard = useCallback(async () => {
     setErrorMessage('');
@@ -186,6 +191,16 @@ export default function DashboardClient() {
     amount: totals.amount + Number(order.total || 0),
   }), { orders: 0, quantity: 0, amount: 0 }), [reportOrders]);
 
+  const manualOrderRows = useMemo(() => manualOrderItems.map((item) => {
+    const product = products.find((candidate) => candidate.id === item.product_id);
+    return product ? { ...item, product } : null;
+  }).filter(Boolean), [manualOrderItems, products]);
+
+  const manualOrderTotal = useMemo(() => manualOrderRows.reduce(
+    (total, item) => total + Number(item.product.price) * item.quantity,
+    0,
+  ), [manualOrderRows]);
+
   const counts = useMemo(() => ({
     products: products.length,
     orders: orders.filter((item) => item.status === 'pending').length,
@@ -233,6 +248,58 @@ export default function DashboardClient() {
       await loadDashboard();
     }
     setSaving(false);
+  };
+
+  const addManualOrderItem = () => {
+    const quantity = Number(manualQuantity);
+    const product = products.find((item) => item.id === manualProductId && item.active);
+    if (!product || !Number.isInteger(quantity) || quantity < 1 || quantity > 99) {
+      setErrorMessage('Alege un produs activ și o cantitate validă.');
+      return;
+    }
+
+    setErrorMessage('');
+    setManualOrderItems((current) => {
+      const existing = current.find((item) => item.product_id === product.id);
+      if (!existing) return [...current, { product_id: product.id, quantity }];
+      return current.map((item) => item.product_id === product.id
+        ? { ...item, quantity: Math.min(99, item.quantity + quantity) }
+        : item);
+    });
+    setManualProductId('');
+    setManualQuantity(1);
+  };
+
+  const updateManualOrderQuantity = (productId, quantity) => {
+    const nextQuantity = Number(quantity);
+    if (!Number.isInteger(nextQuantity) || nextQuantity < 1 || nextQuantity > 99) return;
+    setManualOrderItems((current) => current.map((item) => item.product_id === productId
+      ? { ...item, quantity: nextQuantity }
+      : item));
+  };
+
+  const createManualOrder = async (event) => {
+    event.preventDefault();
+    if (manualOrderItems.length === 0 || creatingOrder) return;
+
+    setCreatingOrder(true);
+    setErrorMessage('');
+    setNotice('');
+
+    const { data: orderNumber, error } = await supabase.rpc('admin_create_order', {
+      p_items: manualOrderItems,
+      p_notes: manualOrderNotes.trim() || null,
+    });
+
+    if (error) {
+      setErrorMessage('Comanda nu a putut fi creată. Verifică produsele și încearcă din nou.');
+    } else {
+      setManualOrderItems([]);
+      setManualOrderNotes('');
+      setNotice(`Comanda ART-${orderNumber} a fost creată.`);
+      await loadDashboard();
+    }
+    setCreatingOrder(false);
   };
 
   const updateStatus = async (kind, id, status) => {
@@ -336,7 +403,61 @@ export default function DashboardClient() {
         )}
 
         {activeTab === 'orders' && (
-          <div className="dashboard-card-list is-compact">
+          <div className="dashboard-orders">
+            <details className="dashboard-manual-order">
+              <summary>Creează o comandă</summary>
+              <form className="dashboard-manual-order-form" onSubmit={createManualOrder}>
+                <div className="dashboard-manual-picker">
+                  <label>
+                    Produs
+                    <select value={manualProductId} onChange={(event) => setManualProductId(event.target.value)}>
+                      <option value="">Alege produsul</option>
+                      {products.filter((product) => product.active).map((product) => (
+                        <option key={product.id} value={product.id}>
+                          {product.name} — {Number(product.price).toFixed(2)} MDL
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Cantitate
+                    <input type="number" min="1" max="99" step="1" value={manualQuantity} onChange={(event) => setManualQuantity(event.target.value)} />
+                  </label>
+                  <button type="button" className="dashboard-secondary" onClick={addManualOrderItem}>Adaugă</button>
+                </div>
+
+                {manualOrderRows.length === 0 ? (
+                  <p className="dashboard-manual-empty">Adaugă cel puțin un produs în comandă.</p>
+                ) : (
+                  <div className="dashboard-manual-items">
+                    {manualOrderRows.map(({ product_id: productId, quantity, product }) => (
+                      <div key={productId} className="dashboard-manual-item">
+                        <div><strong>{product.name}</strong><span>{Number(product.price).toFixed(2)} MDL / buc.</span></div>
+                        <label>
+                          <input aria-label={`Cantitate pentru ${product.name}`} type="number" min="1" max="99" step="1" value={quantity} onChange={(event) => updateManualOrderQuantity(productId, event.target.value)} />
+                        </label>
+                        <strong>{(Number(product.price) * quantity).toFixed(2)} MDL</strong>
+                        <button type="button" className="dashboard-manual-remove" onClick={() => setManualOrderItems((current) => current.filter((item) => item.product_id !== productId))} aria-label={`Elimină ${product.name}`}>Elimină</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <label className="dashboard-manual-notes">
+                  Notă pentru comandă
+                  <textarea rows="2" maxLength="500" value={manualOrderNotes} onChange={(event) => setManualOrderNotes(event.target.value)} placeholder="Opțional" />
+                </label>
+
+                <div className="dashboard-manual-footer">
+                  <p>Total: <strong>{manualOrderTotal.toFixed(2)} MDL</strong></p>
+                  <button type="submit" className="dashboard-primary" disabled={manualOrderItems.length === 0 || creatingOrder}>
+                    {creatingOrder ? 'Se creează…' : 'Creează comanda'}
+                  </button>
+                </div>
+              </form>
+            </details>
+
+            <div className="dashboard-card-list is-compact">
             {orders.length === 0 ? (
               <p className="dashboard-empty">Nu există comenzi.</p>
             ) : orders.map((order) => {
@@ -380,6 +501,7 @@ export default function DashboardClient() {
                 </article>
               );
             })}
+            </div>
           </div>
         )}
 
