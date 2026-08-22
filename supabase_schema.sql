@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
   order_number BIGINT NOT NULL DEFAULT nextval('public.order_number_seq') UNIQUE,
   user_id     UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   status      TEXT NOT NULL DEFAULT 'pending'
-                CHECK (status IN ('pending', 'processing', 'completed', 'cancelled')),
+                CHECK (status IN ('pending', 'processing', 'completed', 'executed', 'cancelled')),
   total       NUMERIC(10,2) NOT NULL DEFAULT 0 CHECK (total >= 0),
   notes       TEXT,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -90,6 +90,13 @@ $$;
 
 ALTER TABLE public.orders
   ALTER COLUMN order_number SET NOT NULL;
+
+ALTER TABLE public.orders
+  DROP CONSTRAINT IF EXISTS orders_status_check;
+
+ALTER TABLE public.orders
+  ADD CONSTRAINT orders_status_check
+  CHECK (status IN ('pending', 'processing', 'completed', 'executed', 'cancelled'));
 
 CREATE UNIQUE INDEX IF NOT EXISTS orders_order_number_key
   ON public.orders(order_number);

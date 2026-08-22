@@ -3194,6 +3194,11 @@ html.dark .service-card {
   color: #1565c0;
 }
 
+.status-executed {
+  background: rgba(91, 74, 65, 0.12);
+  color: #5b4a41;
+}
+
 .dashboard-status {
   min-width: 10rem;
   font-weight: 700;
@@ -3240,6 +3245,43 @@ html.dark .service-card {
 
 .dashboard-manual-order[open] > summary::after {
   content: '−';
+}
+
+.dashboard-order-archive {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--card) 84%, var(--bg));
+}
+
+.dashboard-order-archive > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.1rem;
+  color: var(--text);
+  font-weight: 800;
+  cursor: pointer;
+  list-style: none;
+}
+
+.dashboard-order-archive > summary::-webkit-details-marker {
+  display: none;
+}
+
+.dashboard-order-archive > summary span {
+  min-width: 1.8rem;
+  border-radius: 999px;
+  padding: 0.2rem 0.5rem;
+  background: color-mix(in srgb, var(--primary) 11%, transparent);
+  color: var(--primary);
+  text-align: center;
+  font-size: 0.76rem;
+}
+
+.dashboard-order-archive > .dashboard-card-list {
+  border-top: 1px solid color-mix(in srgb, var(--primary) 9%, transparent);
+  padding: 0.75rem;
 }
 
 .dashboard-manual-order-form {

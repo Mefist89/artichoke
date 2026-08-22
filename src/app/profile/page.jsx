@@ -8,6 +8,7 @@ const ORDER_STATUSES = {
   pending: { label: 'Nouă', background: '#fff3cd', color: '#856404' },
   processing: { label: 'În pregătire', background: '#dbeafe', color: '#1e40af' },
   completed: { label: 'Finalizată', background: '#d4edda', color: '#155724' },
+  executed: { label: 'Executată', background: '#e7e2df', color: '#5b4a41' },
   cancelled: { label: 'Anulată', background: '#fde2e2', color: '#9b1c1c' },
 };
 
