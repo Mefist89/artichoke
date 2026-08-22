@@ -2,8 +2,12 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+
+const ADMIN_LOGIN = 'admin';
+const ADMIN_AUTH_EMAIL = 'jeniabortnic@gmail.com';
+const INVALID_CREDENTIALS_MESSAGE =
+  'Login sau parolă incorectă. Verifică datele și încearcă din nou.';
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -15,18 +19,34 @@ export default function LoginPage() {
     setLoading(true);
     setErrorMessage('');
 
-    const form = event.currentTarget;
-    const email = form.email.value.trim();
-    const password = form.password.value;
+    const formData = new FormData(event.currentTarget);
+    const login = String(formData.get('login') || '').trim().toLowerCase();
+    const password = String(formData.get('password') || '');
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
+    if (login !== ADMIN_LOGIN) {
+      setErrorMessage(INVALID_CREDENTIALS_MESSAGE);
+      setLoading(false);
+      return;
+    }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: ADMIN_AUTH_EMAIL,
       password,
     });
 
-    if (error) {
-      // Mesaj intenționat generic: nu dezvăluie dacă adresa există.
-      setErrorMessage('Email sau parolă incorectă. Verifică datele și încearcă din nou.');
+    if (signInError) {
+      setErrorMessage(INVALID_CREDENTIALS_MESSAGE);
+      setLoading(false);
+      return;
+    }
+
+    const { data: isAdmin, error: adminError } = await supabase.rpc(
+      'is_current_user_admin',
+    );
+
+    if (adminError || !isAdmin) {
+      await supabase.auth.signOut();
+      setErrorMessage('Acest cont nu are acces la panoul administratorului.');
       setLoading(false);
       return;
     }
@@ -52,16 +72,19 @@ export default function LoginPage() {
           <div className="container login-container">
             <article className="contact-form-card">
               <h2>Intrare administrator</h2>
-              <p>Introdu emailul și parola contului creat în Supabase.</p>
+              <p>Introdu loginul și parola administratorului.</p>
 
               <form className="contact-form" onSubmit={handleSubmit}>
                 <label>
-                  Email
+                  Login
                   <input
-                    type="email"
-                    name="email"
+                    type="text"
+                    name="login"
                     autoComplete="username"
-                    inputMode="email"
+                    autoCapitalize="none"
+                    spellCheck="false"
+                    minLength="3"
+                    maxLength="40"
                     required
                     disabled={loading}
                   />
@@ -88,7 +111,6 @@ export default function LoginPage() {
                   </p>
                 )}
               </form>
-              <p className="login-help-link"><Link href="/forgot-password">Ai uitat parola?</Link></p>
             </article>
           </div>
         </section>

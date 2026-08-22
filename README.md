@@ -23,6 +23,10 @@ Necesită Node.js și un proiect Supabase configurat cu schema din `supabase_sch
 
 4. În Supabase Dashboard → SQL Editor, rulează integral `supabase_schema.sql`.
 
+Autentificarea administratorului se face pe pagina `/login` cu loginul `admin` și
+parola contului administrator creat în Supabase Auth. Parola nu este stocată în
+codul aplicației și este verificată direct de Supabase.
+
 5. După ce ai creat și confirmat contul administratorului `jeniabortnic@gmail.com`,
    rulează integral `supabase_admin_dashboard.sql`. Migrarea creează lista privată
    de administratori, politicile RLS și funcțiile necesare panoului `/dashboard`.
