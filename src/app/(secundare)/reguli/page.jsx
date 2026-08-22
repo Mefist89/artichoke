@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 export const metadata = {
   title: 'Reguli | PLAY ROOM ARTICHOKE',
   description: 'Reguli PLAY ROOM ARTICHOKE: text, imagine și video pentru joacă sigură în spațiul destinat copiilor.',
@@ -6,7 +8,7 @@ export const metadata = {
 export default function ReguliPage() {
   return (
     <div className="page-wrapper">
-      <main className="rules-main header-padded">
+      <div className="rules-main header-padded">
         <section className="section contact-hero">
           <div className="container">
             <div className="contact-hero-card">
@@ -40,9 +42,12 @@ export default function ReguliPage() {
               </p>
             </article>
             <figure className="rules-card rules-image-card">
-              <img
-                src="/img/reguli/reguli.png"
+              <Image
+                src="/img/reguli/reguli.jpg"
                 alt="Afiș cu reguli pentru joacă sigură"
+                width={1920}
+                height={1072}
+                sizes="(max-width: 920px) 100vw, 50vw"
               />
             </figure>
           </div>
@@ -55,9 +60,9 @@ export default function ReguliPage() {
               <div className="rules-video-wrap">
                 <video
                   controls
-                  preload="metadata"
+                  preload="none"
                   playsInline
-                  poster="/img/reguli/reguli.png"
+                  poster="/img/reguli/reguli.jpg"
                   aria-label="Video reguli PLAY ROOM ARTICHOKE"
                 >
                   <source src="/img/reguli/reguli-video.mp4" type="video/mp4" />
@@ -67,7 +72,7 @@ export default function ReguliPage() {
             </article>
           </div>
         </section>
-      </main>
+      </div>
     </div>
   );
 }

@@ -12,18 +12,27 @@ export default function ContactPage() {
     setStatus({ text: 'Se trimite...', type: 'info' });
 
     const form = e.target;
-    const data = {
-      name: form.name.value,
-      email: form.email.value,
-      subject: form.subject.value,
-      message: form.message.value,
-    };
-
-    const { error } = await supabase.from('contact_messages').insert([data]);
+    if (form.website.value) {
+      setStatus({ text: 'Mesajul a fost trimis cu succes!', type: 'success' });
+      setLoading(false);
+      return;
+    }
+    const { error } = await supabase.rpc('submit_contact_message', {
+      p_name: form.name.value,
+      p_email: form.email.value,
+      p_subject: form.subject.value,
+      p_message: form.message.value,
+    });
 
     if (error) {
       console.error(error);
-      setStatus({ text: 'Eroare la trimitere. Încearcă din nou.', type: 'error' });
+      const rateLimited = error.message?.includes('Rate limit exceeded');
+      setStatus({
+        text: rateLimited
+          ? 'Ai trimis prea multe mesaje. Te rugăm să încerci mai târziu.'
+          : 'Eroare la trimitere. Încearcă din nou.',
+        type: 'error',
+      });
     } else {
       setStatus({ text: 'Mesajul a fost trimis cu succes!', type: 'success' });
       form.reset();
@@ -33,7 +42,7 @@ export default function ContactPage() {
 
   return (
     <div className="page-wrapper">
-      <main className="contact-main header-padded">
+      <div className="contact-main header-padded">
         <section className="section contact-hero">
           <div className="container">
             <div className="contact-hero-card">
@@ -105,14 +114,18 @@ export default function ContactPage() {
                 timp.
               </p>
               <form className="contact-form" onSubmit={handleSubmit}>
+                <label className="form-honeypot" aria-hidden="true">
+                  Website
+                  <input type="text" name="website" tabIndex="-1" autoComplete="off" />
+                </label>
                 <div className="contact-form-row">
                   <label>
                     Nume
-                    <input type="text" name="name" placeholder="Ion Popescu" required />
+                    <input type="text" name="name" placeholder="Ion Popescu" minLength="2" maxLength="100" required />
                   </label>
                   <label>
                     Email
-                    <input type="email" name="email" placeholder="ion@example.com" required />
+                    <input type="email" name="email" placeholder="ion@example.com" maxLength="254" required />
                   </label>
                 </div>
                 <label>
@@ -127,7 +140,7 @@ export default function ContactPage() {
                 </label>
                 <label>
                   Mesaj
-                  <textarea name="message" rows="5" placeholder="Scrie mesajul tău..." required></textarea>
+                  <textarea name="message" rows="5" placeholder="Scrie mesajul tău..." minLength="10" maxLength="2000" required></textarea>
                 </label>
                 <button type="submit" disabled={loading}>
                   {loading ? 'Se trimite...' : 'Trimite'}
@@ -141,7 +154,7 @@ export default function ContactPage() {
             </article>
           </div>
         </section>
-      </main>
+      </div>
     </div>
   );
 }

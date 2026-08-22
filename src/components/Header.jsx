@@ -1,24 +1,41 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
+const THEME_CHANGE_EVENT = 'artichoke-theme-change';
+
+function subscribeToTheme(onStoreChange) {
+  window.addEventListener('storage', onStoreChange);
+  window.addEventListener(THEME_CHANGE_EVENT, onStoreChange);
+
+  return () => {
+    window.removeEventListener('storage', onStoreChange);
+    window.removeEventListener(THEME_CHANGE_EVENT, onStoreChange);
+  };
+}
+
+function getThemeSnapshot() {
+  return localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
+}
+
+function getServerThemeSnapshot() {
+  return 'light';
+}
+
 export default function Header() {
   const [isNavOpen, setIsNavOpen] = useState(false);
-  const [theme, setTheme] = useState('light');
+  const theme = useSyncExternalStore(
+    subscribeToTheme,
+    getThemeSnapshot,
+    getServerThemeSnapshot,
+  );
   const [user, setUser] = useState(null);
   const pathname = usePathname();
 
   useEffect(() => {
-    // Încarcă starea temei din localStorage
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-      setTheme('dark');
-    }
-
     // Auth State Observer
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null);
@@ -33,16 +50,14 @@ export default function Header() {
     };
   }, []);
 
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+  }, [theme]);
+
   const toggleTheme = () => {
-    if (theme === 'light') {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-      setTheme('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-      setTheme('light');
-    }
+    const nextTheme = theme === 'light' ? 'dark' : 'light';
+    localStorage.setItem('theme', nextTheme);
+    window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
   };
 
   const isActive = (path) => pathname === path ? 'is-active' : '';
@@ -90,8 +105,8 @@ export default function Header() {
             
             <div className="auth-header-state" style={{ marginLeft: '0.5rem', display: 'flex', alignItems: 'center' }}>
               {user ? (
-                <Link href="/profile" title={user.user_metadata?.name || 'Profil'} className="theme-toggle">
-                  <span className="material-icons-outlined">account_circle</span>
+                <Link href="/dashboard" title="Panou administrator" className="theme-toggle">
+                  <span className="material-icons-outlined">dashboard</span>
                 </Link>
               ) : (
                 <Link href="/login" title="Intră" className="theme-toggle">
@@ -116,7 +131,7 @@ export default function Header() {
           <Link href="/reguli" onClick={() => setIsNavOpen(false)} className={isActive('/reguli')}>Reguli</Link>
           <Link href="/contact" onClick={() => setIsNavOpen(false)} className={isActive('/contact')}>Contacte</Link>
           {user ? (
-            <Link href="/profile" onClick={() => setIsNavOpen(false)} className={isActive('/profile')}>Profil ({user.user_metadata?.name || 'Cont'})</Link>
+            <Link href="/dashboard" onClick={() => setIsNavOpen(false)} className={isActive('/dashboard')}>Administrare</Link>
           ) : (
             <Link href="/login" onClick={() => setIsNavOpen(false)} className={isActive('/login')}>Intră / Logare</Link>
           )}

@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 export const metadata = {
   title: 'Galerie | PLAY ROOM ARTICHOKE',
   description: 'Descoperă atmosfera PLAY ROOM ARTICHOKE prin fotografii și un video de prezentare.',
@@ -6,7 +8,7 @@ export const metadata = {
 export default function GaleriePage() {
   return (
     <div className="page-wrapper">
-      <main className="gallery-main header-padded">
+      <div className="gallery-main header-padded">
         <section className="section contact-hero">
           <div className="container">
             <div className="contact-hero-card">
@@ -25,45 +27,66 @@ export default function GaleriePage() {
             <h2 className="section-title">Foto</h2>
             <div className="gallery-grid">
               <figure className="gallery-item gallery-item-wide">
-                <img
+                <Image
                   src="/img/galeria/foto1.jpg"
                   alt="Interior luminos al cafenelei"
+                  width={960}
+                  height={1280}
+                  sizes="(max-width: 640px) 100vw, 66vw"
                 />
               </figure>
               <figure className="gallery-item">
-                <img
+                <Image
                   src="/img/galeria/foto2.jpg"
                   alt="Barista pregătește cafea la espressor"
+                  width={960}
+                  height={1280}
+                  sizes="(max-width: 640px) 100vw, 33vw"
                 />
               </figure>
               <figure className="gallery-item">
-                <img
+                <Image
                   src="/img/galeria/foto3.jpg"
                   alt="Pahare cu latte pe tejghea"
+                  width={1079}
+                  height={1168}
+                  sizes="(max-width: 640px) 100vw, 33vw"
                 />
               </figure>
               <figure className="gallery-item">
-                <img
+                <Image
                   src="/img/galeria/foto4.jpg"
                   alt="Cafea și desert servite pe masă"
+                  width={1920}
+                  height={1446}
+                  sizes="(max-width: 640px) 100vw, 33vw"
                 />
               </figure>
               <figure className="gallery-item">
-                <img
+                <Image
                   src="/img/galeria/foto5.jpg"
                   alt="Mese amenajate într-un colț de cafenea"
+                  width={1920}
+                  height={1446}
+                  sizes="(max-width: 640px) 100vw, 33vw"
                 />
               </figure>
               <figure className="gallery-item gallery-item-wide">
-                <img
+                <Image
                   src="/img/galeria/foto6.jpg"
                   alt="Zonă de servire cu decor modern"
+                  width={1920}
+                  height={1446}
+                  sizes="(max-width: 640px) 100vw, 66vw"
                 />
               </figure>
               <figure className="gallery-item">
-                <img
+                <Image
                   src="/img/galeria/foto10.jpg"
                   alt="Spațiu cozy din cafenea"
+                  width={1446}
+                  height={1920}
+                  sizes="(max-width: 640px) 100vw, 33vw"
                 />
               </figure>
             </div>
@@ -77,7 +100,7 @@ export default function GaleriePage() {
               <div className="gallery-video-grid">
                 <video
                   controls
-                  preload="metadata"
+                  preload="none"
                   playsInline
                   poster="/img/galeria/foto7.jpg"
                   aria-label="Video 1 PLAY ROOM ARTICHOKE"
@@ -87,7 +110,7 @@ export default function GaleriePage() {
                 </video>
                 <video
                   controls
-                  preload="metadata"
+                  preload="none"
                   playsInline
                   poster="/img/galeria/foto8.jpg"
                   aria-label="Video 2 PLAY ROOM ARTICHOKE"
@@ -97,7 +120,7 @@ export default function GaleriePage() {
                 </video>
                 <video
                   controls
-                  preload="metadata"
+                  preload="none"
                   playsInline
                   poster="/img/galeria/foto9.jpg"
                   aria-label="Video 3 PLAY ROOM ARTICHOKE"
@@ -109,7 +132,7 @@ export default function GaleriePage() {
             </article>
           </div>
         </section>
-      </main>
+      </div>
     </div>
   );
 }

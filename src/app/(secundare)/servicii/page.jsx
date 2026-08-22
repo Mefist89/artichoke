@@ -8,7 +8,7 @@ export const metadata = {
 export default function ServiciiPage() {
   return (
     <div className="page-wrapper">
-      <main className="contact-main servicii-main header-padded">
+      <div className="contact-main servicii-main header-padded">
         <section className="section contact-hero">
           <div className="container">
             <div className="contact-hero-card">
@@ -71,7 +71,7 @@ export default function ServiciiPage() {
             </div>
           </div>
         </section>
-      </main>
+      </div>
     </div>
   );
 }
