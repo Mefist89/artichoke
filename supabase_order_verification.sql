@@ -75,4 +75,101 @@ $$;
 REVOKE ALL ON FUNCTION public.get_public_order_board() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.get_public_order_board() TO anon, authenticated, service_role;
 
+CREATE OR REPLACE FUNCTION public.admin_create_order(
+  p_items JSONB,
+  p_notes TEXT DEFAULT NULL
+)
+RETURNS BIGINT
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  v_user_id UUID := auth.uid();
+  v_order_id UUID;
+  v_order_number BIGINT;
+  v_total NUMERIC(10,2);
+  v_input_count INTEGER;
+  v_unique_count INTEGER;
+  v_valid_count INTEGER;
+  v_notes TEXT := NULLIF(pg_catalog.btrim(COALESCE(p_notes, '')), '');
+BEGIN
+  IF v_user_id IS NULL OR NOT private.is_admin() THEN
+    RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'Administrator access required';
+  END IF;
+
+  IF p_items IS NULL
+    OR pg_catalog.jsonb_typeof(p_items) <> 'array'
+    OR pg_catalog.jsonb_array_length(p_items) NOT BETWEEN 1 AND 50 THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid order items';
+  END IF;
+
+  IF v_notes IS NOT NULL AND pg_catalog.char_length(v_notes) > 500 THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Order note is too long';
+  END IF;
+
+  WITH requested AS (
+    SELECT
+      NULLIF(pg_catalog.btrim(item.product_id), '') AS product_id,
+      item.quantity
+    FROM pg_catalog.jsonb_to_recordset(p_items)
+      AS item(product_id TEXT, quantity INTEGER)
+  )
+  SELECT
+    pg_catalog.count(*)::INTEGER,
+    pg_catalog.count(DISTINCT requested.product_id)::INTEGER,
+    pg_catalog.count(*) FILTER (
+      WHERE products.id IS NOT NULL
+        AND requested.quantity BETWEEN 1 AND 99
+    )::INTEGER,
+    COALESCE(
+      pg_catalog.sum(
+        CASE
+          WHEN products.id IS NOT NULL AND requested.quantity BETWEEN 1 AND 99
+            THEN products.price * requested.quantity
+          ELSE 0
+        END
+      ),
+      0
+    )
+  INTO v_input_count, v_unique_count, v_valid_count, v_total
+  FROM requested
+  LEFT JOIN public.products
+    ON products.id = requested.product_id
+   AND products.active = TRUE;
+
+  IF v_input_count <> v_unique_count OR v_input_count <> v_valid_count OR v_total <= 0 THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid or unavailable product';
+  END IF;
+
+  INSERT INTO public.orders (user_id, total, notes, status)
+  VALUES (v_user_id, v_total, v_notes, 'pending')
+  RETURNING id, order_number INTO v_order_id, v_order_number;
+
+  INSERT INTO public.order_items (
+    order_id,
+    product_id,
+    product_name,
+    price,
+    quantity
+  )
+  SELECT
+    v_order_id,
+    products.id,
+    products.name,
+    products.price,
+    requested.quantity
+  FROM pg_catalog.jsonb_to_recordset(p_items)
+    AS requested(product_id TEXT, quantity INTEGER)
+  JOIN public.products
+    ON products.id = pg_catalog.btrim(requested.product_id)
+   AND products.active = TRUE;
+
+  RETURN v_order_number;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.admin_create_order(JSONB, TEXT) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_create_order(JSONB, TEXT) TO authenticated, service_role;
+
 COMMIT;
