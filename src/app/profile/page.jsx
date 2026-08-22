@@ -5,8 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 const ORDER_STATUSES = {
-  pending: { label: 'În așteptare', background: '#fff3cd', color: '#856404' },
-  processing: { label: 'În procesare', background: '#dbeafe', color: '#1e40af' },
+  pending: { label: 'Nouă', background: '#fff3cd', color: '#856404' },
+  processing: { label: 'În pregătire', background: '#dbeafe', color: '#1e40af' },
   completed: { label: 'Finalizată', background: '#d4edda', color: '#155724' },
   cancelled: { label: 'Anulată', background: '#fde2e2', color: '#9b1c1c' },
 };
@@ -43,7 +43,7 @@ function ProfileContent() {
         const { data: ordersData, error } = await supabase
           .from('orders')
           .select(`
-            id, total, status, created_at, notes,
+            id, order_number, total, status, created_at, notes,
             order_items (
               product_name, quantity, price
             )
@@ -174,7 +174,9 @@ function ProfileContent() {
                     return (
                     <div key={order.id} style={{ border: '1px solid #ddd', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                        <strong>Comanda #{order.id.split('-')[0]}</strong>
+                        <strong>
+                          Comanda {order.order_number ? `ART-${order.order_number}` : `#${order.id.split('-')[0]}`}
+                        </strong>
                         <span style={{ 
                           background: orderStatus.background,
                           color: orderStatus.color,

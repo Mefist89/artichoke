@@ -35,7 +35,10 @@ codul aplicației și este verificată direct de Supabase.
    Acesta unește produsele duplicate din coș și activează limitele anti-spam pentru
    formularele publice, fără să modifice produsele sau prețurile.
 
-7. Pornește proiectul:
+7. Pentru numerele scurte, pagina de verificare și ecranul public cu comenzile
+   live, rulează `supabase_order_verification.sql`.
+
+8. Pornește proiectul:
 
    ```bash
    npm run dev
