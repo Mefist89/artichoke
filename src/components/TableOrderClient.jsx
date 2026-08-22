@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -36,7 +37,7 @@ export default function TableOrderClient({ token }) {
       supabase.rpc('get_table_order_context', { p_token: token }),
       supabase
         .from('products')
-        .select('id,name,price,category,description,sort_order')
+        .select('id,name,price,category,description,image,sort_order')
         .eq('active', true)
         .order('sort_order', { ascending: true })
         .order('name', { ascending: true }),
@@ -192,8 +193,22 @@ export default function TableOrderClient({ token }) {
               <div className="table-order-products">
                 {categoryProducts.map((product) => {
                   const quantity = Number(quantities[product.id] || 0);
+                  const imagePath = product.image?.startsWith('/') ? product.image : '';
                   return (
                     <article key={product.id} className={quantity > 0 ? 'is-selected' : ''}>
+                      <div className="table-order-product-image">
+                        {imagePath ? (
+                          <Image
+                            src={imagePath}
+                            alt=""
+                            width={160}
+                            height={120}
+                            sizes="80px"
+                          />
+                        ) : (
+                          <span aria-hidden="true">{product.name.slice(0, 1)}</span>
+                        )}
+                      </div>
                       <div>
                         <h3>{product.name}</h3>
                         {product.description && <p>{product.description}</p>}
