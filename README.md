@@ -39,7 +39,11 @@ codul aplicației și este verificată direct de Supabase.
    pagina de verificare și ecranul public cu comenzile live, rulează
    `supabase_order_verification.sql`.
 
-8. Pornește proiectul:
+8. Pentru cele șase mese, sesiunile QR temporare și comenzile fără autentificare,
+   rulează integral `supabase_table_ordering.sql`. Linkurile QR sunt accesibile
+   numai cât timp administratorul păstrează sesiunea mesei deschisă.
+
+9. Pornește proiectul:
 
    ```bash
    npm run dev
