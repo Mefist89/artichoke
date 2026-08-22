@@ -35,6 +35,7 @@ const ORDER_STATUS = [
   ['pending', 'Nouă'],
   ['processing', 'În pregătire'],
   ['completed', 'Finalizată'],
+  ['executed', 'Executată'],
 ];
 
 const RESERVATION_STATUS = [
@@ -81,6 +82,48 @@ function StatusSelect({ value, options, disabled, onChange, label }) {
         <option key={status} value={status}>{text}</option>
       ))}
     </select>
+  );
+}
+
+function OrderRecord({ order, busyId, onStatusChange }) {
+  const itemCount = order.order_items?.reduce(
+    (total, item) => total + Number(item.quantity || 0),
+    0,
+  ) || 0;
+
+  return (
+    <article className="dashboard-record dashboard-record-compact">
+      <div className="dashboard-record-head dashboard-compact-head">
+        <div className="dashboard-compact-title">
+          <span className="dashboard-record-code">{formatOrderNumber(order)}</span>
+          <div>
+            <h2>{Number(order.total).toFixed(2)} MDL</h2>
+            <p>{formatDate(order.created_at)} · {itemCount} produse</p>
+          </div>
+        </div>
+        <StatusSelect
+          value={order.status}
+          options={ORDER_STATUS}
+          disabled={busyId === order.id}
+          label="Starea comenzii"
+          onChange={(status) => onStatusChange(order.id, status)}
+        />
+      </div>
+      <details className="dashboard-details">
+        <summary>Detalii comandă</summary>
+        <div className="dashboard-details-body">
+          <ul className="dashboard-items">
+            {order.order_items?.map((item, index) => (
+              <li key={`${item.product_name}-${index}`}>
+                <span>{item.product_name} × {item.quantity}</span>
+                <strong>{(Number(item.price) * item.quantity).toFixed(2)} MDL</strong>
+              </li>
+            ))}
+          </ul>
+          {order.notes && <p className="dashboard-note"><strong>Notă:</strong> {order.notes}</p>}
+        </div>
+      </details>
+    </article>
   );
 }
 
@@ -200,6 +243,16 @@ export default function DashboardClient() {
     (total, item) => total + Number(item.product.price) * item.quantity,
     0,
   ), [manualOrderRows]);
+
+  const activeOrders = useMemo(
+    () => orders.filter((order) => order.status !== 'executed'),
+    [orders],
+  );
+
+  const archivedOrders = useMemo(
+    () => orders.filter((order) => order.status === 'executed'),
+    [orders],
+  );
 
   const counts = useMemo(() => ({
     products: products.length,
@@ -457,50 +510,33 @@ export default function DashboardClient() {
               </form>
             </details>
 
-            <div className="dashboard-card-list is-compact">
-            {orders.length === 0 ? (
-              <p className="dashboard-empty">Nu există comenzi.</p>
-            ) : orders.map((order) => {
-              const itemCount = order.order_items?.reduce(
-                (total, item) => total + Number(item.quantity || 0),
-                0,
-              ) || 0;
+            <details className="dashboard-order-archive">
+              <summary>Comenzi arhivate <span>{archivedOrders.length}</span></summary>
+              <div className="dashboard-card-list is-compact">
+                {archivedOrders.length === 0 ? (
+                  <p className="dashboard-empty">Arhiva este goală.</p>
+                ) : archivedOrders.map((order) => (
+                  <OrderRecord
+                    key={order.id}
+                    order={order}
+                    busyId={busyId}
+                    onStatusChange={(id, status) => updateStatus('order', id, status)}
+                  />
+                ))}
+              </div>
+            </details>
 
-              return (
-                <article key={order.id} className="dashboard-record dashboard-record-compact">
-                  <div className="dashboard-record-head dashboard-compact-head">
-                    <div className="dashboard-compact-title">
-                      <span className="dashboard-record-code">{formatOrderNumber(order)}</span>
-                      <div>
-                        <h2>{Number(order.total).toFixed(2)} MDL</h2>
-                        <p>{formatDate(order.created_at)} · {itemCount} produse</p>
-                      </div>
-                    </div>
-                    <StatusSelect
-                      value={order.status}
-                      options={ORDER_STATUS}
-                      disabled={busyId === order.id}
-                      label="Starea comenzii"
-                      onChange={(status) => updateStatus('order', order.id, status)}
-                    />
-                  </div>
-                  <details className="dashboard-details">
-                    <summary>Detalii comandă</summary>
-                    <div className="dashboard-details-body">
-                      <ul className="dashboard-items">
-                        {order.order_items?.map((item, index) => (
-                          <li key={`${item.product_name}-${index}`}>
-                            <span>{item.product_name} × {item.quantity}</span>
-                            <strong>{(Number(item.price) * item.quantity).toFixed(2)} MDL</strong>
-                          </li>
-                        ))}
-                      </ul>
-                      {order.notes && <p className="dashboard-note"><strong>Notă:</strong> {order.notes}</p>}
-                    </div>
-                  </details>
-                </article>
-              );
-            })}
+            <div className="dashboard-card-list is-compact">
+            {activeOrders.length === 0 ? (
+              <p className="dashboard-empty">Nu există comenzi.</p>
+            ) : activeOrders.map((order) => (
+              <OrderRecord
+                key={order.id}
+                order={order}
+                busyId={busyId}
+                onStatusChange={(id, status) => updateStatus('order', id, status)}
+              />
+            ))}
             </div>
           </div>
         )}

@@ -8,6 +8,7 @@ const STATUS_LABELS = {
   pending: 'Nouă',
   processing: 'În pregătire',
   completed: 'Finalizată',
+  executed: 'Executată',
   cancelled: 'Anulată',
 };
 

@@ -3,6 +3,13 @@
 
 BEGIN;
 
+ALTER TABLE public.orders
+  DROP CONSTRAINT IF EXISTS orders_status_check;
+
+ALTER TABLE public.orders
+  ADD CONSTRAINT orders_status_check
+  CHECK (status IN ('pending', 'processing', 'completed', 'executed', 'cancelled'));
+
 CREATE SEQUENCE IF NOT EXISTS public.order_number_seq
   AS BIGINT
   START WITH 100001;
@@ -171,5 +178,33 @@ $$;
 
 REVOKE ALL ON FUNCTION public.admin_create_order(JSONB, TEXT) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.admin_create_order(JSONB, TEXT) TO authenticated, service_role;
+
+CREATE OR REPLACE FUNCTION public.admin_update_order_status(p_order_id UUID, p_status TEXT)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  IF NOT private.is_admin() THEN
+    RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'Administrator access required';
+  END IF;
+
+  IF p_status NOT IN ('pending', 'processing', 'completed', 'executed', 'cancelled') THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid order status';
+  END IF;
+
+  UPDATE public.orders
+  SET status = p_status, updated_at = now()
+  WHERE id = p_order_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0002', MESSAGE = 'Order not found';
+  END IF;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.admin_update_order_status(UUID, TEXT) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_update_order_status(UUID, TEXT) TO authenticated, service_role;
 
 COMMIT;
