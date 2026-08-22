@@ -23,6 +23,7 @@ const TABS = [
   ['tables', 'Mese'],
   ['reservations', 'Rezervări'],
   ['reports', 'Rapoarte'],
+  ['audit', 'Jurnal'],
 ];
 
 const CATEGORY_OPTIONS = [
@@ -45,6 +46,34 @@ const RESERVATION_STATUS = [
   ['confirmed', 'Confirmată'],
   ['completed', 'Finalizată'],
 ];
+
+const AUDIT_ACTION_LABELS = {
+  product_created: 'Produs creat',
+  product_updated: 'Produs modificat',
+  product_price_changed: 'Preț modificat',
+  order_status_changed: 'Stare comandă modificată',
+  table_opened: 'Masă deschisă',
+  table_closed: 'Masă închisă',
+  table_expired: 'Sesiune expirată automat',
+  table_qr_rotated: 'Cod QR înlocuit',
+};
+
+const AUDIT_FIELD_LABELS = {
+  name: 'Denumire',
+  price: 'Preț',
+  active: 'Activ',
+  category: 'Categorie',
+  order_number: 'Comandă',
+  status: 'Stare',
+  table_number: 'Masă',
+  opened_at: 'Deschisă la',
+  expires_at: 'Expiră la',
+  closed_at: 'Închisă la',
+  qr_replaced: 'QR înlocuit',
+};
+
+const ADMIN_INACTIVITY_LIMIT_MS = 30 * 60 * 1000;
+const ADMIN_ACTIVITY_STORAGE_KEY = 'artichoke_admin_last_activity';
 
 function formatDate(value) {
   if (!value) return '—';
@@ -77,6 +106,48 @@ function formatOrderNumber(order) {
   return order.order_number
     ? `ART-${order.order_number}`
     : `#${order.id.slice(0, 8).toUpperCase()}`;
+}
+
+function formatAuditValue(field, value) {
+  if (value === null || value === undefined) return '—';
+  if (field === 'price') return `${Number(value).toFixed(2)} MDL`;
+  if (field === 'active' || field === 'qr_replaced') return value ? 'Da' : 'Nu';
+  if (field === 'status') return getOrderStatusLabel(value);
+  if (field.endsWith('_at')) return formatDate(value);
+  if (field === 'order_number') return `ART-${value}`;
+  return String(value);
+}
+
+function getAuditEntity(log) {
+  if (log.entity_type === 'products') {
+    return log.new_value?.name || log.old_value?.name || log.entity_id;
+  }
+  if (log.entity_type === 'orders') {
+    const number = log.new_value?.order_number || log.old_value?.order_number;
+    return number ? `ART-${number}` : `Comandă ${log.entity_id.slice(0, 8)}`;
+  }
+  if (log.entity_type === 'table_sessions') {
+    const tableNumber = log.new_value?.table_number || log.old_value?.table_number;
+    return `Masa ${tableNumber || '—'}`;
+  }
+  return log.entity_id;
+}
+
+function AuditSnapshot({ title, value }) {
+  if (!value) return <div className="dashboard-audit-snapshot is-empty"><span>{title}</span><em>—</em></div>;
+  return (
+    <div className="dashboard-audit-snapshot">
+      <span>{title}</span>
+      <dl>
+        {Object.entries(value).map(([field, fieldValue]) => (
+          <div key={field}>
+            <dt>{AUDIT_FIELD_LABELS[field] || field}</dt>
+            <dd>{formatAuditValue(field, fieldValue)}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
 }
 
 function StatusSelect({ value, options, disabled, onChange, label }) {
@@ -150,6 +221,7 @@ export default function DashboardClient() {
   const [tables, setTables] = useState([]);
   const [reservations, setReservations] = useState([]);
   const [securityEvents, setSecurityEvents] = useState([]);
+  const [auditLogs, setAuditLogs] = useState([]);
   const [productForm, setProductForm] = useState(EMPTY_PRODUCT);
   const [editingId, setEditingId] = useState('');
   const [reportMode, setReportMode] = useState('day');
@@ -164,8 +236,78 @@ export default function DashboardClient() {
   const [qrTable, setQrTable] = useState(null);
   const [siteOrigin, setSiteOrigin] = useState('');
 
+  const expireAdminSession = useCallback(async () => {
+    window.localStorage.removeItem(ADMIN_ACTIVITY_STORAGE_KEY);
+    await supabase.auth.signOut();
+    router.replace('/login?reason=inactive');
+    router.refresh();
+  }, [router]);
+
+  useEffect(() => {
+    let timeoutId;
+    let lastStorageWrite = 0;
+
+    const scheduleExpiration = () => {
+      window.clearTimeout(timeoutId);
+      const storedActivity = Number(window.localStorage.getItem(ADMIN_ACTIVITY_STORAGE_KEY));
+      const lastActivity = Number.isFinite(storedActivity) && storedActivity > 0
+        ? storedActivity
+        : Date.now();
+      const remaining = ADMIN_INACTIVITY_LIMIT_MS - (Date.now() - lastActivity);
+
+      if (remaining <= 0) {
+        void expireAdminSession();
+        return;
+      }
+
+      timeoutId = window.setTimeout(() => void expireAdminSession(), remaining);
+    };
+
+    const markActivity = () => {
+      const now = Date.now();
+      if (now - lastStorageWrite >= 15_000) {
+        window.localStorage.setItem(ADMIN_ACTIVITY_STORAGE_KEY, String(now));
+        lastStorageWrite = now;
+      }
+      scheduleExpiration();
+    };
+
+    const checkVisibility = () => {
+      if (document.visibilityState === 'visible') scheduleExpiration();
+    };
+
+    if (!window.localStorage.getItem(ADMIN_ACTIVITY_STORAGE_KEY)) {
+      window.localStorage.setItem(ADMIN_ACTIVITY_STORAGE_KEY, String(Date.now()));
+    }
+    scheduleExpiration();
+
+    const activityEvents = ['pointerdown', 'keydown', 'touchstart', 'scroll'];
+    activityEvents.forEach((eventName) => {
+      window.addEventListener(eventName, markActivity, { passive: true });
+    });
+    window.addEventListener('storage', scheduleExpiration);
+    document.addEventListener('visibilitychange', checkVisibility);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      activityEvents.forEach((eventName) => {
+        window.removeEventListener(eventName, markActivity);
+      });
+      window.removeEventListener('storage', scheduleExpiration);
+      document.removeEventListener('visibilitychange', checkVisibility);
+    };
+  }, [expireAdminSession]);
+
   const loadDashboard = useCallback(async () => {
     setErrorMessage('');
+
+    const lastActivity = Number(window.localStorage.getItem(ADMIN_ACTIVITY_STORAGE_KEY));
+    if (Number.isFinite(lastActivity)
+      && lastActivity > 0
+      && Date.now() - lastActivity >= ADMIN_INACTIVITY_LIMIT_MS) {
+      await expireAdminSession();
+      return;
+    }
 
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     if (sessionError || !sessionData.session) {
@@ -185,7 +327,7 @@ export default function DashboardClient() {
     }
 
     const securitySince = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const [productsResult, ordersResult, reservationsResult, tablesResult, securityResult] = await Promise.all([
+    const [productsResult, ordersResult, reservationsResult, tablesResult, securityResult, auditResult] = await Promise.all([
       supabase
         .from('products')
         .select('id,name,price,active,category,description,image,sort_order,updated_at')
@@ -208,9 +350,14 @@ export default function DashboardClient() {
         .gte('created_at', securitySince)
         .order('created_at', { ascending: false })
         .limit(30),
+      supabase
+        .from('admin_audit_log')
+        .select('id,actor_user_id,actor_email,action,entity_type,entity_id,old_value,new_value,created_at')
+        .order('created_at', { ascending: false })
+        .limit(200),
     ]);
 
-    const firstError = [productsResult, ordersResult, reservationsResult, tablesResult, securityResult]
+    const firstError = [productsResult, ordersResult, reservationsResult, tablesResult, securityResult, auditResult]
       .find((result) => result.error)?.error;
     if (firstError) {
       setErrorMessage('Datele nu au putut fi încărcate. Verifică schema și încearcă din nou.');
@@ -220,9 +367,10 @@ export default function DashboardClient() {
       setReservations(reservationsResult.data || []);
       setTables(tablesResult.data || []);
       setSecurityEvents(securityResult.data || []);
+      setAuditLogs(auditResult.data || []);
     }
     setLoading(false);
-  }, [router]);
+  }, [expireAdminSession, router]);
 
   useEffect(() => {
     // Citirea inițială sincronizează interfața cu sesiunea și baza externă.
@@ -315,7 +463,8 @@ export default function DashboardClient() {
     tables: tables.filter((table) => table.session_id).length,
     reservations: reservations.filter((item) => item.status === 'pending').length,
     reports: orders.length,
-  }), [activeOrders.length, orders.length, products.length, reservations, tables]);
+    audit: auditLogs.length,
+  }), [activeOrders.length, auditLogs.length, orders.length, products.length, reservations, tables]);
 
   const resetProductForm = () => {
     setEditingId('');
@@ -523,6 +672,7 @@ export default function DashboardClient() {
             <p className="section-kicker">Administrare securizată</p>
             <h1>Panoul magazinului</h1>
             <p>Produse, comenzi, rezervări și rapoarte într-un singur loc.</p>
+            <small className="dashboard-session-note">Sesiunea se închide după 30 de minute fără activitate.</small>
           </div>
           <div className="dashboard-heading-actions">
             <Link
@@ -912,6 +1062,42 @@ export default function DashboardClient() {
               </div>
             )}
           </div>
+        )}
+
+        {activeTab === 'audit' && (
+          <section className="dashboard-audit">
+            <div className="dashboard-section-title">
+              <div>
+                <h2>Jurnal administrativ</h2>
+                <p>Ultimele 200 de modificări. Înregistrările pot fi citite, dar nu pot fi modificate din panou.</p>
+              </div>
+            </div>
+
+            {auditLogs.length === 0 ? (
+              <p className="dashboard-empty">Nu există încă acțiuni înregistrate.</p>
+            ) : (
+              <div className="dashboard-audit-list">
+                {auditLogs.map((log) => (
+                  <article key={log.id} className="dashboard-audit-record">
+                    <header>
+                      <div>
+                        <span>{AUDIT_ACTION_LABELS[log.action] || log.action}</span>
+                        <h3>{getAuditEntity(log)}</h3>
+                      </div>
+                      <time dateTime={log.created_at}>{formatDate(log.created_at)}</time>
+                    </header>
+                    <p className="dashboard-audit-actor">
+                      Efectuat de: <strong>{log.actor_email || (log.actor_user_id ? 'Administrator' : 'Sistem / SQL Editor')}</strong>
+                    </p>
+                    <div className="dashboard-audit-values">
+                      <AuditSnapshot title="Valoare veche" value={log.old_value} />
+                      <AuditSnapshot title="Valoare nouă" value={log.new_value} />
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
         )}
       </section>
 

@@ -305,9 +305,8 @@ CREATE TABLE IF NOT EXISTS private.admin_users (
 ALTER TABLE private.admin_users ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE private.admin_users FROM PUBLIC, anon, authenticated;
 
-INSERT INTO private.admin_users (user_id)
-SELECT id FROM auth.users WHERE lower(email) = lower('jeniabortnic@gmail.com')
-ON CONFLICT (user_id) DO NOTHING;
+-- Administratorul este asociat separat în SQL Editor după crearea contului Auth.
+-- Emailul real nu este păstrat în fișierele publice ale proiectului.
 
 CREATE OR REPLACE FUNCTION private.is_admin()
 RETURNS BOOLEAN
