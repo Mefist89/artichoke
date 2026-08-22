@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { QRCodeSVG } from 'qrcode.react';
 import { supabase } from '@/lib/supabase';
 
 const EMPTY_PRODUCT = {
@@ -19,6 +20,7 @@ const EMPTY_PRODUCT = {
 const TABS = [
   ['products', 'Produse'],
   ['orders', 'Comenzi'],
+  ['tables', 'Mese'],
   ['reservations', 'Rezervări'],
   ['reports', 'Rapoarte'],
 ];
@@ -98,7 +100,7 @@ function OrderRecord({ order, busyId, onStatusChange }) {
           <span className="dashboard-record-code">{formatOrderNumber(order)}</span>
           <div>
             <h2>{Number(order.total).toFixed(2)} MDL</h2>
-            <p>{formatDate(order.created_at)} · {itemCount} produse</p>
+            <p>{formatDate(order.created_at)} · {itemCount} produse{order.table_number ? ` · Masa ${order.table_number}` : ''}</p>
           </div>
         </div>
         <StatusSelect
@@ -137,6 +139,7 @@ export default function DashboardClient() {
   const [notice, setNotice] = useState('');
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [tables, setTables] = useState([]);
   const [reservations, setReservations] = useState([]);
   const [productForm, setProductForm] = useState(EMPTY_PRODUCT);
   const [editingId, setEditingId] = useState('');
@@ -149,6 +152,8 @@ export default function DashboardClient() {
   const [manualOrderItems, setManualOrderItems] = useState([]);
   const [manualOrderNotes, setManualOrderNotes] = useState('');
   const [creatingOrder, setCreatingOrder] = useState(false);
+  const [qrTable, setQrTable] = useState(null);
+  const [siteOrigin, setSiteOrigin] = useState('');
 
   const loadDashboard = useCallback(async () => {
     setErrorMessage('');
@@ -170,7 +175,7 @@ export default function DashboardClient() {
       return;
     }
 
-    const [productsResult, ordersResult, reservationsResult] = await Promise.all([
+    const [productsResult, ordersResult, reservationsResult, tablesResult] = await Promise.all([
       supabase
         .from('products')
         .select('id,name,price,active,category,description,image,sort_order,updated_at')
@@ -178,16 +183,17 @@ export default function DashboardClient() {
         .order('name', { ascending: true }),
       supabase
         .from('orders')
-        .select('id,order_number,user_id,total,status,notes,created_at,updated_at,order_items(product_name,price,quantity)')
+        .select('id,order_number,user_id,total,status,notes,table_number,table_session_id,created_at,updated_at,order_items(product_name,price,quantity)')
         .order('created_at', { ascending: false }),
       supabase
         .from('reservations')
         .select('id,name,phone,reservation_date,reservation_time,guests,zone,message,status,created_at')
         .order('reservation_date', { ascending: false })
         .order('reservation_time', { ascending: false }),
+      supabase.rpc('admin_get_tables'),
     ]);
 
-    const firstError = [productsResult, ordersResult, reservationsResult]
+    const firstError = [productsResult, ordersResult, reservationsResult, tablesResult]
       .find((result) => result.error)?.error;
     if (firstError) {
       setErrorMessage('Datele nu au putut fi încărcate. Verifică schema și încearcă din nou.');
@@ -195,6 +201,7 @@ export default function DashboardClient() {
       setProducts(productsResult.data || []);
       setOrders(ordersResult.data || []);
       setReservations(reservationsResult.data || []);
+      setTables(tablesResult.data || []);
     }
     setLoading(false);
   }, [router]);
@@ -212,6 +219,12 @@ export default function DashboardClient() {
     setReportDay(today);
     setReportStart(today);
     setReportEnd(today);
+  }, []);
+
+  useEffect(() => {
+    // Originea este disponibilă doar în browser și este inclusă în QR.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSiteOrigin(window.location.origin);
   }, []);
 
   const reportOrders = useMemo(() => {
@@ -254,12 +267,17 @@ export default function DashboardClient() {
     [orders],
   );
 
+  const tableQrUrl = useMemo(() => (
+    qrTable?.token && siteOrigin ? `${siteOrigin}/masa/${qrTable.token}` : ''
+  ), [qrTable, siteOrigin]);
+
   const counts = useMemo(() => ({
     products: products.length,
-    orders: orders.filter((item) => item.status === 'pending').length,
+    orders: activeOrders.length,
+    tables: tables.filter((table) => table.session_id).length,
     reservations: reservations.filter((item) => item.status === 'pending').length,
     reports: orders.length,
-  }), [orders, products, reservations]);
+  }), [activeOrders.length, orders.length, products.length, reservations, tables]);
 
   const resetProductForm = () => {
     setEditingId('');
@@ -353,6 +371,56 @@ export default function DashboardClient() {
       await loadDashboard();
     }
     setCreatingOrder(false);
+  };
+
+  const openTableSession = async (tableNumber) => {
+    setBusyId(`table-${tableNumber}`);
+    setErrorMessage('');
+    setNotice('');
+
+    const { data, error } = await supabase.rpc('admin_open_table_session', {
+      p_table_number: tableNumber,
+    });
+
+    if (error || !data?.[0]?.token) {
+      setErrorMessage('Sesiunea mesei nu a putut fi deschisă. Verifică migrarea Supabase.');
+    } else {
+      setQrTable({ table_number: tableNumber, token: data[0].token });
+      setNotice(`Sesiunea pentru masa ${tableNumber} este activă.`);
+      await loadDashboard();
+    }
+    setBusyId('');
+  };
+
+  const closeTableSession = async (tableNumber) => {
+    if (!window.confirm(`Închizi sesiunea pentru masa ${tableNumber}?`)) return;
+
+    setBusyId(`table-${tableNumber}`);
+    setErrorMessage('');
+    setNotice('');
+
+    const { error } = await supabase.rpc('admin_close_table_session', {
+      p_table_number: tableNumber,
+    });
+
+    if (error) {
+      setErrorMessage('Masa are comenzi nefinalizate sau sesiunea nu mai este activă.');
+    } else {
+      if (qrTable?.table_number === tableNumber) setQrTable(null);
+      setNotice(`Sesiunea pentru masa ${tableNumber} a fost închisă.`);
+      await loadDashboard();
+    }
+    setBusyId('');
+  };
+
+  const copyTableLink = async () => {
+    if (!tableQrUrl) return;
+    try {
+      await navigator.clipboard.writeText(tableQrUrl);
+      setNotice('Linkul mesei a fost copiat.');
+    } catch {
+      setErrorMessage('Linkul nu a putut fi copiat automat.');
+    }
   };
 
   const updateStatus = async (kind, id, status) => {
@@ -578,6 +646,57 @@ export default function DashboardClient() {
           </div>
         )}
 
+        {activeTab === 'tables' && (
+          <section className="dashboard-tables">
+            <div className="dashboard-tables-intro">
+              <div>
+                <h2>Comenzi la masă</h2>
+                <p>Deschide o sesiune, arată QR-ul clientului și închide masa după finalizarea tuturor comenzilor.</p>
+              </div>
+              <span>{tables.filter((table) => table.session_id).length}/6 active</span>
+            </div>
+
+            <div className="dashboard-table-grid">
+              {tables.map((table) => {
+                const isActive = Boolean(table.session_id);
+                const isBusy = busyId === `table-${table.table_number}`;
+                return (
+                  <article key={table.table_number} className={`dashboard-table-card ${isActive ? 'is-occupied' : 'is-free'}`}>
+                    <button
+                      type="button"
+                      className="dashboard-table-main"
+                      disabled={isBusy}
+                      onClick={() => isActive
+                        ? setQrTable({ table_number: table.table_number, token: table.token })
+                        : openTableSession(table.table_number)}
+                    >
+                      <span>Masa</span>
+                      <strong>{table.table_number}</strong>
+                      <small>{isActive ? 'Sesiune activă · Vezi QR' : 'Liberă · Deschide sesiunea'}</small>
+                    </button>
+
+                    <div className="dashboard-table-meta">
+                      <span>{Number(table.order_count || 0)} comenzi</span>
+                      <span>{Number(table.open_order_count || 0)} în lucru</span>
+                    </div>
+
+                    {isActive && (
+                      <button
+                        type="button"
+                        className="dashboard-table-close"
+                        disabled={isBusy}
+                        onClick={() => closeTableSession(table.table_number)}
+                      >
+                        {isBusy ? 'Se procesează…' : 'Închide sesiunea'}
+                      </button>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         {activeTab === 'reports' && (
           <div className="dashboard-reports">
             <div className="dashboard-report-toolbar">
@@ -658,7 +777,7 @@ export default function DashboardClient() {
                       <header className="dashboard-report-order-head">
                         <p>Comanda</p>
                         <h2>{formatOrderNumber(order)}</h2>
-                        <span>{formatDate(order.created_at)} · {getOrderStatusLabel(order.status)}</span>
+                        <span>{formatDate(order.created_at)} · {getOrderStatusLabel(order.status)}{order.table_number ? ` · Masa ${order.table_number}` : ''}</span>
                       </header>
 
                       <div className="dashboard-report-table-wrap">
@@ -702,6 +821,29 @@ export default function DashboardClient() {
           </div>
         )}
       </section>
+
+      {qrTable && (
+        <div className="dashboard-qr-backdrop" role="presentation" onMouseDown={() => setQrTable(null)}>
+          <section
+            className="dashboard-qr-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="table-qr-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <button type="button" className="dashboard-qr-close" onClick={() => setQrTable(null)} aria-label="Închide">×</button>
+            <p>Masa</p>
+            <h2 id="table-qr-title">{qrTable.table_number}</h2>
+            <span>Clientul scanează codul pentru a comanda.</span>
+            {tableQrUrl && (
+              <div className="dashboard-qr-code">
+                <QRCodeSVG value={tableQrUrl} size={260} level="M" marginSize={2} title={`Comandă la masa ${qrTable.table_number}`} />
+              </div>
+            )}
+            <button type="button" className="dashboard-secondary" onClick={copyTableLink}>Copiază linkul</button>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

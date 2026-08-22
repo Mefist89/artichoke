@@ -54,20 +54,46 @@ CREATE SEQUENCE IF NOT EXISTS public.order_number_seq
   AS BIGINT
   START WITH 100001;
 
+CREATE TABLE IF NOT EXISTS public.table_sessions (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  token        UUID NOT NULL DEFAULT gen_random_uuid() UNIQUE,
+  table_number SMALLINT NOT NULL CHECK (table_number BETWEEN 1 AND 6),
+  status       TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'closed')),
+  opened_by    UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  opened_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  closed_at    TIMESTAMPTZ
+);
+
 CREATE TABLE IF NOT EXISTS public.orders (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_number BIGINT NOT NULL DEFAULT nextval('public.order_number_seq') UNIQUE,
-  user_id     UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id     UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   status      TEXT NOT NULL DEFAULT 'pending'
                 CHECK (status IN ('pending', 'processing', 'completed', 'executed', 'cancelled')),
   total       NUMERIC(10,2) NOT NULL DEFAULT 0 CHECK (total >= 0),
   notes       TEXT,
+  table_session_id UUID REFERENCES public.table_sessions(id) ON DELETE SET NULL,
+  table_number SMALLINT CHECK (table_number IS NULL OR table_number BETWEEN 1 AND 6),
+  client_request_id UUID,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 ALTER TABLE public.orders
   ADD COLUMN IF NOT EXISTS order_number BIGINT;
+
+ALTER TABLE public.orders
+  ALTER COLUMN user_id DROP NOT NULL;
+
+ALTER TABLE public.orders
+  ADD COLUMN IF NOT EXISTS table_session_id UUID
+    REFERENCES public.table_sessions(id) ON DELETE SET NULL;
+
+ALTER TABLE public.orders
+  ADD COLUMN IF NOT EXISTS table_number SMALLINT;
+
+ALTER TABLE public.orders
+  ADD COLUMN IF NOT EXISTS client_request_id UUID;
 
 ALTER TABLE public.orders
   ALTER COLUMN order_number SET DEFAULT nextval('public.order_number_seq');
@@ -97,6 +123,13 @@ ALTER TABLE public.orders
 ALTER TABLE public.orders
   ADD CONSTRAINT orders_status_check
   CHECK (status IN ('pending', 'processing', 'completed', 'executed', 'cancelled'));
+
+ALTER TABLE public.orders
+  DROP CONSTRAINT IF EXISTS orders_table_number_check;
+
+ALTER TABLE public.orders
+  ADD CONSTRAINT orders_table_number_check
+  CHECK (table_number IS NULL OR table_number BETWEEN 1 AND 6);
 
 CREATE UNIQUE INDEX IF NOT EXISTS orders_order_number_key
   ON public.orders(order_number);
@@ -389,6 +422,7 @@ ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contact_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reservations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.table_sessions ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS products_select_active ON public.products;
 CREATE POLICY products_select_active ON public.products
@@ -836,6 +870,8 @@ REVOKE INSERT, UPDATE, DELETE
   ON TABLE public.contact_messages, public.reservations
   FROM anon, authenticated;
 
+REVOKE ALL ON TABLE public.table_sessions FROM PUBLIC, anon, authenticated;
+
 REVOKE ALL ON FUNCTION public.add_to_cart(TEXT, INTEGER) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.set_cart_item_quantity(UUID, INTEGER) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.remove_cart_item(UUID) FROM PUBLIC, anon;
@@ -856,6 +892,16 @@ GRANT EXECUTE ON FUNCTION public.submit_reservation(TEXT, TEXT, DATE, TIME, INTE
 -- 6. Indecși
 -- ─────────────────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_orders_user_id ON public.orders(user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS table_sessions_one_active_per_table
+  ON public.table_sessions(table_number)
+  WHERE status = 'active';
+CREATE INDEX IF NOT EXISTS idx_table_sessions_status_opened
+  ON public.table_sessions(status, opened_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS orders_client_request_id_key
+  ON public.orders(client_request_id)
+  WHERE client_request_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_orders_table_session
+  ON public.orders(table_session_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_order_items_order ON public.order_items(order_id);
 CREATE INDEX IF NOT EXISTS idx_order_items_product ON public.order_items(product_id);
 CREATE INDEX IF NOT EXISTS idx_cart_user_id ON public.cart_items(user_id);
