@@ -850,7 +850,7 @@ export default function DashboardClient() {
                     maxLength="500"
                     value={productForm.image}
                     onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
-                    placeholder="/img/cofe/produs.jpg"
+                    placeholder="/img/cofe/cappuccino.jpg"
                   />
                   {productForm.image && (/^\//.test(productForm.image) || /^https:\/\//.test(productForm.image)) && (
                     <div className="dashboard-image-preview">

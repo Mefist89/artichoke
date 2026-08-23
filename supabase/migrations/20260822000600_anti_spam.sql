@@ -1,7 +1,7 @@
 -- =============================================================
 -- PLAY ROOM ARTICHOKE — protecție anti-spam pentru formulare
 -- Rulați integral în Supabase Dashboard → SQL Editor.
--- Necesită ca supabase_schema.sql și supabase_table_ordering.sql să fie rulate.
+-- Necesită migrările 20260822000100 și 20260822000500.
 -- =============================================================
 
 BEGIN;

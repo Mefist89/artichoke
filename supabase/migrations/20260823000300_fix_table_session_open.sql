@@ -1,6 +1,6 @@
 -- =============================================================
 -- PLAY ROOM ARTICHOKE — corectarea deschiderii sesiunilor de masă
--- Rulați integral în proiectul aiyoepumhzofjsfhohtk:
+-- Rulați integral în proiectul Supabase activ:
 -- Supabase Dashboard → SQL Editor → New query → Run.
 -- =============================================================
 

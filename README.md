@@ -4,7 +4,7 @@ Site Next.js pentru PLAY ROOM ARTICHOKE, conectat la Supabase pentru autentifica
 
 ## Configurare locală
 
-Necesită Node.js și un proiect Supabase configurat cu schema din `supabase_schema.sql`.
+Necesită Node.js și un proiect Supabase configurat cu migrările din `supabase/migrations`.
 
 1. Instalează dependențele:
 
@@ -26,14 +26,15 @@ Necesită Node.js și un proiect Supabase configurat cu schema din `supabase_sch
    ADMIN_EMAIL=your_private_admin_email
    ```
 
-4. În Supabase Dashboard → SQL Editor, rulează integral `supabase_schema.sql`.
+4. În Supabase Dashboard → SQL Editor, rulează în ordine fișierele din
+   `supabase/migrations`, începând cu `20260822000100_initial_schema.sql`.
 
 Autentificarea administratorului se face pe pagina `/login` cu loginul `admin` și
 parola contului administrator creat în Supabase Auth. Parola nu este stocată în
 codul aplicației și este verificată direct de Supabase.
 
 5. După ce ai creat și confirmat contul administratorului, rulează integral
-   `supabase_admin_dashboard.sql`. În SQL Editor asociază apoi contul ales cu rolul
+   `supabase/migrations/20260822000200_admin_dashboard.sql`. În SQL Editor asociază apoi contul ales cu rolul
    de administrator, fără să salvezi emailul real în Git:
 
    ```sql
@@ -43,21 +44,22 @@ codul aplicației și este verificată direct de Supabase.
    ON CONFLICT (user_id) DO NOTHING;
    ```
 
-6. Pentru bazele configurate anterior, rulează și `supabase_security_hardening.sql`.
+6. Pentru bazele configurate anterior, rulează și
+   `supabase/migrations/20260822000300_security_hardening.sql`.
    Acesta unește produsele duplicate din coș și activează limitele anti-spam pentru
    formularele publice, fără să modifice produsele sau prețurile.
 
 7. Pentru numerele scurte, crearea și arhivarea comenzilor de către administrator,
    pagina de verificare și ecranul public cu comenzile live, rulează
-   `supabase_order_verification.sql`.
+   `supabase/migrations/20260822000400_order_verification.sql`.
 
 8. Pentru cele șase mese, sesiunile QR temporare și comenzile fără autentificare,
-   rulează integral `supabase_table_ordering.sql`. Linkurile QR sunt accesibile
+   rulează integral `supabase/migrations/20260822000500_table_ordering.sql`. Linkurile QR sunt accesibile
    cel mult două ore și numai cât timp administratorul păstrează sesiunea mesei
    deschisă. Rularea din nou a migrării actualizează bazele configurate anterior.
 
 9. Pentru protecția formularelor și jurnalul de activitate suspectă, rulează
-   integral `supabase_anti_spam.sql`.
+   integral `supabase/migrations/20260822000600_anti_spam.sql`.
 
 10. În Cloudflare creează un widget Turnstile și permite domeniul
    `artichoke-seven.vercel.app`. Copiază cheia publică în
@@ -66,23 +68,23 @@ codul aplicației și este verificată direct de Supabase.
    plus un secret aleatoriu `ANTI_SPAM_SECRET` de minimum 32 de caractere.
 
 11. Pentru limitarea încercărilor de autentificare rulează integral
-   `supabase_admin_login_security.sql`. Păstrează emailul contului numai în
+   `supabase/migrations/20260822000700_admin_login_security.sql`. Păstrează emailul contului numai în
    variabila serverului `ADMIN_EMAIL` din Vercel. După două parole greșite,
    autentificarea solicită Turnstile; după cinci încercări greșite accesul este
    blocat timp de 30 de minute.
 
 12. Pentru jurnalul modificărilor administrative rulează integral
-   `supabase_admin_audit.sql`. Jurnalul înregistrează modificările produselor,
+   `supabase/migrations/20260822000800_admin_audit.sql`. Jurnalul înregistrează modificările produselor,
    stărilor comenzilor și sesiunilor meselor și poate fi doar citit din panou.
 
 13. Pentru numerele rezervărilor, programarea celor șase mese, protecția împotriva
    suprapunerilor și deschiderea automată a sesiunii QR la sosirea clientului,
-   rulează integral `supabase_reservations_management.sql`. Dacă migrarea a fost
+   rulează integral `supabase/migrations/20260823000100_reservations_management.sql`. Dacă migrarea a fost
    rulată înainte de introducerea alegerii mesei în formularul public, rulează și
-   `supabase_reservation_table_choice.sql`.
+   `supabase/migrations/20260823000200_reservation_table_choice.sql`.
 
 14. Pentru încărcarea imaginilor produselor direct din panoul administratorului,
-   rulează integral `supabase_product_images.sql`. Migrarea creează bucket-ul
+   rulează integral `supabase/migrations/20260823000400_product_images.sql`. Migrarea creează bucket-ul
    public `product-images`, limitează fișierele la 5 MB și permite încărcarea,
    modificarea sau ștergerea numai administratorilor.
 

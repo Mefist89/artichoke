@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import sliderOne from '../../public/img/slider/slider-1.jpg';
-import sliderTwo from '../../public/img/slider/slider-2.jpg';
-import sliderThree from '../../public/img/slider/slider-3.jpg';
+import sliderOne from '../../public/img/galeria/foto4.jpg';
+import sliderTwo from '../../public/img/galeria/foto5.jpg';
+import sliderThree from '../../public/img/galeria/foto9.jpg';
 
 const slides = [
   { src: sliderOne, alt: 'Interior confortabil la PLAY ROOM ARTICHOKE' },

@@ -32,7 +32,7 @@ export default function Home() {
 
           <div className="seasonal-grid">
             <article className="season-card">
-              <Image src="/img/oferte/latte-lavanda.jpg" alt="Latte cu lavandă" width={900} height={900} sizes="(max-width: 640px) 100vw, 50vw" />
+              <Image src="/img/migdale/latte-migdale.jpg" alt="Latte cu lavandă" width={900} height={900} sizes="(max-width: 640px) 100vw, 50vw" />
               <div className="season-card-text">
                 <h3>Latte cu lavandă</h3>
                 <p>Espresso fin cu sirop de lavandă de casă și spumă de lapte catifelată.</p>

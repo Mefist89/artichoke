@@ -1,5 +1,7 @@
--- Storage public pentru imaginile produselor.
+-- =============================================================
+-- PLAY ROOM ARTICHOKE — Storage pentru imaginile produselor
 -- Încărcarea și modificarea sunt permise numai administratorilor.
+-- =============================================================
 
 BEGIN;
 
