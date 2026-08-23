@@ -5204,6 +5204,14 @@ body:has(.order-board-page) .scroll-top-btn {
   margin: 0.25rem 0 0;
 }
 
+.contact-form label > small {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
 .dashboard-reservations {
   display: grid;
   gap: 1rem;

@@ -77,7 +77,9 @@ codul aplicației și este verificată direct de Supabase.
 
 13. Pentru numerele rezervărilor, programarea celor șase mese, protecția împotriva
    suprapunerilor și deschiderea automată a sesiunii QR la sosirea clientului,
-   rulează integral `supabase_reservations_management.sql`.
+   rulează integral `supabase_reservations_management.sql`. Dacă migrarea a fost
+   rulată înainte de introducerea alegerii mesei în formularul public, rulează și
+   `supabase_reservation_table_choice.sql`.
 
 14. Pornește proiectul:
 

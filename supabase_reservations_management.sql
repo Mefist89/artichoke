@@ -78,6 +78,7 @@ CREATE INDEX IF NOT EXISTS idx_reservations_archive
   ON public.reservations(status, reservation_date DESC, reservation_time DESC);
 
 DROP FUNCTION IF EXISTS public.submit_reservation(TEXT, TEXT, DATE, TIME, INTEGER, TEXT, TEXT);
+DROP FUNCTION IF EXISTS public.submit_reservation(TEXT, TEXT, DATE, TIME, INTEGER, INTEGER, TEXT);
 
 CREATE FUNCTION public.submit_reservation(
   p_name TEXT,
@@ -85,7 +86,7 @@ CREATE FUNCTION public.submit_reservation(
   p_date DATE,
   p_time TIME,
   p_guests INTEGER,
-  p_zone TEXT,
+  p_table_number INTEGER,
   p_message TEXT DEFAULT NULL
 )
 RETURNS BIGINT
@@ -127,8 +128,8 @@ BEGIN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid guest count';
   END IF;
 
-  IF p_zone IS NULL OR p_zone NOT IN ('Interior', 'Terasă', 'Lângă fereastră') THEN
-    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid zone';
+  IF p_table_number IS NULL OR p_table_number NOT BETWEEN 1 AND 6 THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid table number';
   END IF;
 
   IF v_message IS NOT NULL AND pg_catalog.char_length(v_message) > 1000 THEN
@@ -155,6 +156,7 @@ BEGIN
     reservation_date,
     reservation_time,
     guests,
+    table_number,
     zone,
     message
   ) VALUES (
@@ -163,7 +165,8 @@ BEGIN
     p_date,
     p_time,
     p_guests,
-    p_zone,
+    p_table_number,
+    'Interior',
     v_message
   )
   RETURNING reservation_number INTO v_number;
@@ -369,12 +372,12 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.submit_reservation(TEXT, TEXT, DATE, TIME, INTEGER, TEXT, TEXT)
+REVOKE ALL ON FUNCTION public.submit_reservation(TEXT, TEXT, DATE, TIME, INTEGER, INTEGER, TEXT)
   FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.admin_manage_reservation(UUID, TEXT, INTEGER)
   FROM PUBLIC, anon;
 
-GRANT EXECUTE ON FUNCTION public.submit_reservation(TEXT, TEXT, DATE, TIME, INTEGER, TEXT, TEXT)
+GRANT EXECUTE ON FUNCTION public.submit_reservation(TEXT, TEXT, DATE, TIME, INTEGER, INTEGER, TEXT)
   TO service_role;
 GRANT EXECUTE ON FUNCTION public.admin_manage_reservation(UUID, TEXT, INTEGER)
   TO authenticated, service_role;

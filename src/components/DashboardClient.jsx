@@ -335,7 +335,7 @@ export default function DashboardClient() {
         .order('created_at', { ascending: false }),
       supabase
         .from('reservations')
-        .select('id,reservation_number,name,phone,reservation_date,reservation_time,guests,zone,message,table_number,duration_minutes,table_session_id,status,created_at,updated_at')
+        .select('id,reservation_number,name,phone,reservation_date,reservation_time,guests,message,table_number,duration_minutes,table_session_id,status,created_at,updated_at')
         .order('reservation_date', { ascending: false })
         .order('reservation_time', { ascending: false }),
       supabase.rpc('admin_get_tables'),

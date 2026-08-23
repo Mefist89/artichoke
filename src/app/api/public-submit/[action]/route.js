@@ -72,7 +72,7 @@ async function submitBusinessAction(supabase, action, body) {
     p_date: body.date,
     p_time: body.time,
     p_guests: body.guests,
-    p_zone: body.zone,
+    p_table_number: body.tableNumber,
     p_message: body.message || null,
   });
 }

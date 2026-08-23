@@ -60,7 +60,7 @@ export default function RezervariPage() {
         date: form.date.value,
         time: form.time.value,
         guests: Number(form.guests.value),
-        zone: form.zone.value,
+        tableNumber: Number(form.tableNumber.value),
         message: form.message.value || null,
         turnstileToken,
       });
@@ -209,12 +209,14 @@ export default function RezervariPage() {
                     <input type="number" name="guests" min="2" max="12" defaultValue="2" required />
                   </label>
                   <label>
-                    Zonă
-                    <select name="zone" required>
-                      <option value="Interior">Interior</option>
-                      <option value="Terasă">Terasă</option>
-                      <option value="Lângă fereastră">Lângă fereastră</option>
+                    Masă
+                    <select name="tableNumber" defaultValue="" required>
+                      <option value="" disabled>Alege masa</option>
+                      {Array.from({ length: 6 }, (_, index) => (
+                        <option key={index + 1} value={index + 1}>Masa {index + 1}</option>
+                      ))}
                     </select>
+                    <small>Alegerea mesei va fi confirmată de administrator.</small>
                   </label>
                 </div>
                 <label>

@@ -224,14 +224,14 @@ GRANT EXECUTE ON FUNCTION public.check_public_submission_limit(TEXT, TEXT, TEXT,
 -- Formularele publice sunt acceptate numai prin ruta serverului Next.js.
 REVOKE EXECUTE ON FUNCTION public.submit_contact_message(TEXT, TEXT, TEXT, TEXT)
   FROM anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.submit_reservation(TEXT, TEXT, DATE, TIME, INTEGER, TEXT, TEXT)
+REVOKE EXECUTE ON FUNCTION public.submit_reservation(TEXT, TEXT, DATE, TIME, INTEGER, INTEGER, TEXT)
   FROM anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.submit_table_order(UUID, UUID, JSONB, TEXT)
   FROM anon, authenticated;
 
 GRANT EXECUTE ON FUNCTION public.submit_contact_message(TEXT, TEXT, TEXT, TEXT)
   TO service_role;
-GRANT EXECUTE ON FUNCTION public.submit_reservation(TEXT, TEXT, DATE, TIME, INTEGER, TEXT, TEXT)
+GRANT EXECUTE ON FUNCTION public.submit_reservation(TEXT, TEXT, DATE, TIME, INTEGER, INTEGER, TEXT)
   TO service_role;
 GRANT EXECUTE ON FUNCTION public.submit_table_order(UUID, UUID, JSONB, TEXT)
   TO service_role;

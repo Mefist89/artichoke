@@ -67,7 +67,7 @@ function ReservationDetails({ reservation }) {
       <div className="dashboard-details-body">
         <div className="dashboard-record-details">
           <span>Telefon: <a href={`tel:${reservation.phone}`}>{reservation.phone}</a></span>
-          <span>Zona: {reservation.zone}</span>
+          <span>Masa solicitată: {reservation.table_number ? `Masa ${reservation.table_number}` : '—'}</span>
           <span>Durata: {reservation.duration_minutes || 120} minute</span>
         </div>
         {reservation.message && <p className="dashboard-note">{reservation.message}</p>}

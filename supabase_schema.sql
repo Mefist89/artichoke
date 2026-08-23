@@ -828,6 +828,7 @@ END;
 $$;
 
 DROP FUNCTION IF EXISTS public.submit_reservation(TEXT, TEXT, DATE, TIME, INTEGER, TEXT, TEXT);
+DROP FUNCTION IF EXISTS public.submit_reservation(TEXT, TEXT, DATE, TIME, INTEGER, INTEGER, TEXT);
 
 CREATE FUNCTION public.submit_reservation(
   p_name TEXT,
@@ -835,7 +836,7 @@ CREATE FUNCTION public.submit_reservation(
   p_date DATE,
   p_time TIME,
   p_guests INTEGER,
-  p_zone TEXT,
+  p_table_number INTEGER,
   p_message TEXT DEFAULT NULL
 )
 RETURNS BIGINT
@@ -877,8 +878,8 @@ BEGIN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid guest count';
   END IF;
 
-  IF p_zone IS NULL OR p_zone NOT IN ('Interior', 'Terasă', 'Lângă fereastră') THEN
-    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid zone';
+  IF p_table_number IS NULL OR p_table_number NOT BETWEEN 1 AND 6 THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid table number';
   END IF;
 
   IF v_message IS NOT NULL AND pg_catalog.char_length(v_message) > 1000 THEN
@@ -905,6 +906,7 @@ BEGIN
     reservation_date,
     reservation_time,
     guests,
+    table_number,
     zone,
     message
   ) VALUES (
@@ -913,7 +915,8 @@ BEGIN
     p_date,
     p_time,
     p_guests,
-    p_zone,
+    p_table_number,
+    'Interior',
     v_message
   )
   RETURNING reservation_number INTO v_number;
@@ -944,7 +947,7 @@ REVOKE ALL ON FUNCTION public.set_cart_item_quantity(UUID, INTEGER) FROM PUBLIC,
 REVOKE ALL ON FUNCTION public.remove_cart_item(UUID) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.checkout_cart(TEXT) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.submit_contact_message(TEXT, TEXT, TEXT, TEXT) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.submit_reservation(TEXT, TEXT, DATE, TIME, INTEGER, TEXT, TEXT) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.submit_reservation(TEXT, TEXT, DATE, TIME, INTEGER, INTEGER, TEXT) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION public.add_to_cart(TEXT, INTEGER) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.set_cart_item_quantity(UUID, INTEGER) TO authenticated, service_role;
@@ -952,7 +955,7 @@ GRANT EXECUTE ON FUNCTION public.remove_cart_item(UUID) TO authenticated, servic
 GRANT EXECUTE ON FUNCTION public.checkout_cart(TEXT) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.submit_contact_message(TEXT, TEXT, TEXT, TEXT)
   TO service_role;
-GRANT EXECUTE ON FUNCTION public.submit_reservation(TEXT, TEXT, DATE, TIME, INTEGER, TEXT, TEXT)
+GRANT EXECUTE ON FUNCTION public.submit_reservation(TEXT, TEXT, DATE, TIME, INTEGER, INTEGER, TEXT)
   TO service_role;
 
 -- ─────────────────────────────────────────────────────────────
