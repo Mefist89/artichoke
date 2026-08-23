@@ -3,14 +3,41 @@ import { useEffect, useRef, useState } from 'react';
 import TurnstileWidget from '@/components/TurnstileWidget';
 import { submitPublicAction } from '@/lib/deviceId';
 
+const TIME_OPTIONS = Array.from({ length: 23 }, (_, index) => {
+  const totalMinutes = 9 * 60 + index * 30;
+  const hours = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+  const minutes = String(totalMinutes % 60).padStart(2, '0');
+  return { value: `${hours}:${minutes}`, totalMinutes };
+});
+
+function getChisinauParts() {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Chisinau',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(new Date());
+  return Object.fromEntries(parts.map((part) => [part.type, part.value]));
+}
+
 export default function RezervariPage() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ text: '', type: '' });
   const [reservationNumber, setReservationNumber] = useState('');
+  const [selectedDate, setSelectedDate] = useState('');
   const dateInputRef = useRef(null);
-  const timeInputRef = useRef(null);
   const [turnstileToken, setTurnstileToken] = useState('');
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+
+  const currentChisinau = getChisinauParts();
+  const today = `${currentChisinau.year}-${currentChisinau.month}-${currentChisinau.day}`;
+  const currentMinutes = Number(currentChisinau.hour) * 60 + Number(currentChisinau.minute);
+  const availableTimes = selectedDate
+    ? TIME_OPTIONS.filter((option) => selectedDate !== today || option.totalMinutes > currentMinutes)
+    : [];
 
   useEffect(() => {
     const dateInput = dateInputRef.current;
@@ -67,6 +94,7 @@ export default function RezervariPage() {
       setReservationNumber(`REZ-${number}`);
       setStatus({ text: 'Cererea a fost înregistrată. Te vom contacta pentru confirmare.', type: 'success' });
       form.reset();
+      setSelectedDate('');
     } catch (error) {
       setStatus({
         text: error.code === 'rate_limited'
@@ -177,30 +205,23 @@ export default function RezervariPage() {
                       name="date"
                       required
                       onChange={(event) => {
-                        const timeInput = timeInputRef.current;
-                        if (!timeInput) return;
-                        const today = dateInputRef.current?.min;
-                        if (event.target.value !== today) {
-                          timeInput.min = '09:00';
-                          return;
-                        }
-
-                        const parts = new Intl.DateTimeFormat('en-GB', {
-                          timeZone: 'Europe/Chisinau',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          hourCycle: 'h23',
-                        }).formatToParts(new Date());
-                        const getPart = (type) => Number(parts.find((part) => part.type === type)?.value);
-                        const currentMinutes = getPart('hour') * 60 + getPart('minute');
-                        const nextSlot = Math.max(9 * 60, Math.ceil((currentMinutes + 1) / 30) * 30);
-                        timeInput.min = `${String(Math.floor(nextSlot / 60)).padStart(2, '0')}:${String(nextSlot % 60).padStart(2, '0')}`;
+                        setSelectedDate(event.target.value);
                       }}
                     />
                   </label>
                   <label>
                     Ora
-                    <input ref={timeInputRef} type="time" name="time" min="09:00" max="20:00" step="1800" required />
+                    <select key={selectedDate} name="time" defaultValue="" disabled={!selectedDate} required>
+                      <option value="" disabled>
+                        {selectedDate ? 'Alege ora' : 'Alege mai întâi data'}
+                      </option>
+                      {availableTimes.map((option) => (
+                        <option key={option.value} value={option.value}>{option.value}</option>
+                      ))}
+                    </select>
+                    {selectedDate === today && availableTimes.length === 0 && (
+                      <small>Nu mai sunt intervale disponibile astăzi. Alege altă zi.</small>
+                    )}
                   </label>
                 </div>
                 <div className="contact-form-row">
