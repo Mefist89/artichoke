@@ -232,9 +232,14 @@ CREATE TABLE IF NOT EXISTS public.contact_messages (
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE SEQUENCE IF NOT EXISTS public.reservation_number_seq
+  AS BIGINT
+  START WITH 100001;
+
 -- Rezervări publice. Câmpurile de stare nu pot fi controlate de browser.
 CREATE TABLE IF NOT EXISTS public.reservations (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  reservation_number BIGINT NOT NULL DEFAULT nextval('public.reservation_number_seq') UNIQUE,
   name              TEXT NOT NULL CHECK (char_length(name) BETWEEN 2 AND 100),
   phone             TEXT NOT NULL CHECK (char_length(phone) BETWEEN 6 AND 30),
   reservation_date  DATE NOT NULL,
@@ -242,11 +247,55 @@ CREATE TABLE IF NOT EXISTS public.reservations (
   guests            INTEGER NOT NULL CHECK (guests BETWEEN 2 AND 12),
   zone              TEXT NOT NULL CHECK (zone IN ('Interior', 'Terasă', 'Lângă fereastră')),
   message           TEXT CHECK (message IS NULL OR char_length(message) <= 1000),
+  table_number      SMALLINT CHECK (table_number IS NULL OR table_number BETWEEN 1 AND 6),
+  duration_minutes  INTEGER NOT NULL DEFAULT 120
+                      CHECK (duration_minutes BETWEEN 30 AND 240 AND duration_minutes % 30 = 0),
+  table_session_id  UUID REFERENCES public.table_sessions(id) ON DELETE SET NULL,
   status            TEXT NOT NULL DEFAULT 'pending'
-                      CHECK (status IN ('pending', 'confirmed', 'cancelled', 'completed')),
+                      CHECK (status IN ('pending', 'confirmed', 'arrived', 'completed', 'cancelled', 'no_show')),
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE public.reservations
+  ADD COLUMN IF NOT EXISTS reservation_number BIGINT,
+  ADD COLUMN IF NOT EXISTS table_number SMALLINT,
+  ADD COLUMN IF NOT EXISTS duration_minutes INTEGER NOT NULL DEFAULT 120,
+  ADD COLUMN IF NOT EXISTS table_session_id UUID
+    REFERENCES public.table_sessions(id) ON DELETE SET NULL;
+
+UPDATE public.reservations
+SET reservation_number = nextval('public.reservation_number_seq')
+WHERE reservation_number IS NULL;
+
+ALTER TABLE public.reservations
+  ALTER COLUMN reservation_number SET DEFAULT nextval('public.reservation_number_seq'),
+  ALTER COLUMN reservation_number SET NOT NULL;
+
+ALTER TABLE public.reservations
+  DROP CONSTRAINT IF EXISTS reservations_status_check;
+ALTER TABLE public.reservations
+  ADD CONSTRAINT reservations_status_check
+  CHECK (status IN ('pending', 'confirmed', 'arrived', 'completed', 'cancelled', 'no_show'));
+
+ALTER TABLE public.reservations
+  DROP CONSTRAINT IF EXISTS reservations_table_number_check;
+ALTER TABLE public.reservations
+  ADD CONSTRAINT reservations_table_number_check
+  CHECK (table_number IS NULL OR table_number BETWEEN 1 AND 6);
+
+ALTER TABLE public.reservations
+  DROP CONSTRAINT IF EXISTS reservations_duration_minutes_check;
+ALTER TABLE public.reservations
+  ADD CONSTRAINT reservations_duration_minutes_check
+  CHECK (duration_minutes BETWEEN 30 AND 240 AND duration_minutes % 30 = 0);
+
+CREATE UNIQUE INDEX IF NOT EXISTS reservations_number_key
+  ON public.reservations(reservation_number);
+
+ALTER TABLE public.table_sessions
+  ADD COLUMN IF NOT EXISTS reservation_id UUID
+    REFERENCES public.reservations(id) ON DELETE SET NULL;
 
 -- Migrare compatibilă pentru bazele create cu versiunea anterioară.
 ALTER TABLE public.cart_items
@@ -778,7 +827,9 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.submit_reservation(
+DROP FUNCTION IF EXISTS public.submit_reservation(TEXT, TEXT, DATE, TIME, INTEGER, TEXT, TEXT);
+
+CREATE FUNCTION public.submit_reservation(
   p_name TEXT,
   p_phone TEXT,
   p_date DATE,
@@ -787,17 +838,18 @@ CREATE OR REPLACE FUNCTION public.submit_reservation(
   p_zone TEXT,
   p_message TEXT DEFAULT NULL
 )
-RETURNS UUID
+RETURNS BIGINT
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = ''
 AS $$
 DECLARE
-  v_id UUID;
+  v_number BIGINT;
   v_name TEXT := pg_catalog.btrim(p_name);
   v_phone TEXT := pg_catalog.btrim(p_phone);
   v_message TEXT := NULLIF(pg_catalog.btrim(p_message), '');
   v_today DATE := (pg_catalog.now() AT TIME ZONE 'Europe/Chisinau')::DATE;
+  v_now TIME := (pg_catalog.now() AT TIME ZONE 'Europe/Chisinau')::TIME;
 BEGIN
   IF v_name IS NULL OR pg_catalog.char_length(v_name) NOT BETWEEN 2 AND 100 THEN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid name';
@@ -813,8 +865,12 @@ BEGIN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid reservation date';
   END IF;
 
-  IF p_time IS NULL OR p_time < TIME '09:00' OR p_time > TIME '22:00' THEN
+  IF p_time IS NULL OR p_time < TIME '09:00' OR p_time > TIME '20:00' THEN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid reservation time';
+  END IF;
+
+  IF p_date = v_today AND p_time <= v_now THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Reservation time is in the past';
   END IF;
 
   IF p_guests IS NULL OR p_guests NOT BETWEEN 2 AND 12 THEN
@@ -860,9 +916,9 @@ BEGIN
     p_zone,
     v_message
   )
-  RETURNING id INTO v_id;
+  RETURNING reservation_number INTO v_number;
 
-  RETURN v_id;
+  RETURN v_number;
 END;
 $$;
 

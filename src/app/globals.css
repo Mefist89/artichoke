@@ -5164,3 +5164,384 @@ body:has(.order-board-page) .scroll-top-btn {
     text-align: left;
   }
 }
+
+/* Reservation management */
+.reservation-submit-result {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 1rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 16%, transparent);
+  border-radius: 1rem;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--card) 82%, var(--bg));
+  text-align: center;
+}
+
+.reservation-submit-result.is-error {
+  border-color: color-mix(in srgb, #c43a2f 35%, transparent);
+  color: #a62a22;
+}
+
+.reservation-submit-result span,
+.reservation-submit-result small {
+  color: var(--muted);
+}
+
+.reservation-submit-result span {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.reservation-submit-result strong {
+  color: var(--primary);
+  font-size: clamp(1.65rem, 6vw, 2.35rem);
+  letter-spacing: 0.04em;
+}
+
+.reservation-submit-result p {
+  margin: 0.25rem 0 0;
+}
+
+.dashboard-reservations {
+  display: grid;
+  gap: 1rem;
+}
+
+.dashboard-reservation-toolbar,
+.dashboard-reservation-day-title,
+.dashboard-reservation-archive {
+  border: 1px solid color-mix(in srgb, var(--primary) 13%, transparent);
+  border-radius: 1rem;
+  background: var(--card);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-reservation-toolbar {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  padding: 1rem;
+}
+
+.dashboard-reservation-date-modes {
+  display: inline-grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.25rem;
+  border-radius: 0.8rem;
+  padding: 0.25rem;
+  background: color-mix(in srgb, var(--primary) 8%, var(--bg));
+}
+
+.dashboard-reservation-date-modes button,
+.dashboard-reservation-actions button {
+  border: 0;
+  border-radius: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  background: transparent;
+  color: var(--primary);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.dashboard-reservation-date-modes button.is-active,
+.dashboard-reservation-actions button.is-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.dashboard-reservation-calendar,
+.dashboard-reservation-search,
+.dashboard-reservation-controls label {
+  display: grid;
+  gap: 0.3rem;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.dashboard-reservation-search {
+  min-width: min(100%, 16rem);
+  margin-left: auto;
+}
+
+.dashboard-reservation-calendar input,
+.dashboard-reservation-search input,
+.dashboard-reservation-controls select {
+  min-height: 2.55rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 17%, transparent);
+  border-radius: 0.68rem;
+  padding: 0.55rem 0.7rem;
+  background: color-mix(in srgb, var(--bg) 65%, var(--card));
+  color: var(--text);
+  font: inherit;
+}
+
+.dashboard-reservation-day-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+}
+
+.dashboard-reservation-day-title span,
+.dashboard-reservation-day-title strong {
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.dashboard-reservation-day-title h2 {
+  margin: 0.2rem 0 0;
+  color: var(--primary);
+}
+
+.dashboard-reservation-schedule {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.dashboard-reservation-schedule > article {
+  min-height: 8.5rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--primary) 13%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, #b8d99d 20%, var(--card));
+}
+
+.dashboard-reservation-schedule > article.is-booked {
+  border-color: color-mix(in srgb, #ce7a3f 38%, transparent);
+  background: color-mix(in srgb, #f2b36f 27%, var(--card));
+}
+
+.dashboard-reservation-schedule header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0.9rem;
+  color: var(--primary);
+}
+
+.dashboard-reservation-schedule header span {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.dashboard-reservation-schedule header strong {
+  font-size: 1.6rem;
+}
+
+.dashboard-reservation-schedule article > p,
+.dashboard-reservation-schedule article > div {
+  margin: 0;
+  border-top: 1px solid color-mix(in srgb, var(--primary) 10%, transparent);
+  padding: 0.65rem 0.9rem;
+}
+
+.dashboard-reservation-schedule article > p {
+  color: #49743d;
+  font-weight: 750;
+}
+
+.dashboard-reservation-schedule article > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.7rem;
+  color: var(--text);
+  font-size: 0.82rem;
+}
+
+.dashboard-reservation-schedule time {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.dashboard-reservation-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.dashboard-reservation-card {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--primary) 13%, transparent);
+  border-left: 5px solid color-mix(in srgb, var(--primary) 25%, transparent);
+  border-radius: 1rem;
+  background: var(--card);
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.045);
+}
+
+.dashboard-reservation-card.is-confirmed {
+  border-left-color: #d38a3e;
+}
+
+.dashboard-reservation-card.is-arrived {
+  border-left-color: #4f914a;
+}
+
+.dashboard-reservation-card.is-cancelled,
+.dashboard-reservation-card.is-no_show {
+  opacity: 0.78;
+}
+
+.dashboard-reservation-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+}
+
+.dashboard-reservation-code {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+}
+
+.dashboard-reservation-head h3 {
+  margin: 0.25rem 0 0;
+  color: var(--primary);
+  font-size: 1.2rem;
+}
+
+.dashboard-reservation-head p {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+}
+
+.dashboard-reservation-status {
+  border-radius: 999px;
+  padding: 0.45rem 0.7rem;
+  background: color-mix(in srgb, var(--primary) 9%, var(--bg));
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.dashboard-reservation-status.is-confirmed {
+  background: #ffedcf;
+  color: #985b1d;
+}
+
+.dashboard-reservation-status.is-arrived,
+.dashboard-reservation-status.is-completed {
+  background: #e1f2dc;
+  color: #376c32;
+}
+
+.dashboard-reservation-status.is-cancelled,
+.dashboard-reservation-status.is-no_show {
+  background: #f5dfdc;
+  color: #983a31;
+}
+
+.dashboard-reservation-controls {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.8rem;
+  border-top: 1px solid color-mix(in srgb, var(--primary) 9%, transparent);
+  padding: 0.85rem 1.1rem;
+  background: color-mix(in srgb, var(--bg) 48%, var(--card));
+}
+
+.dashboard-reservation-controls label {
+  min-width: 8rem;
+}
+
+.dashboard-reservation-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.dashboard-reservation-actions button {
+  background: color-mix(in srgb, var(--primary) 9%, var(--card));
+}
+
+.dashboard-reservation-actions button.is-danger {
+  color: #aa3026;
+  background: color-mix(in srgb, #d85a4b 11%, var(--card));
+}
+
+.dashboard-reservation-actions button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.dashboard-reservation-archive > summary {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 1.2rem;
+  color: var(--primary);
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.dashboard-reservation-archive > summary span {
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+.dashboard-reservation-archive > .dashboard-reservation-list {
+  border-top: 1px solid color-mix(in srgb, var(--primary) 10%, transparent);
+  padding: 0.85rem;
+}
+
+@media (max-width: 800px) {
+  .dashboard-reservation-schedule {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-reservation-search {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .dashboard-reservation-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dashboard-reservation-actions {
+    justify-content: stretch;
+  }
+
+  .dashboard-reservation-actions button {
+    flex: 1 1 9rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .dashboard-reservation-date-modes,
+  .dashboard-reservation-calendar,
+  .dashboard-reservation-schedule {
+    width: 100%;
+  }
+
+  .dashboard-reservation-schedule {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-reservation-day-title,
+  .dashboard-reservation-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .dashboard-reservation-status {
+    white-space: normal;
+  }
+}

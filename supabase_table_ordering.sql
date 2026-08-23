@@ -144,10 +144,10 @@ BEGIN
 
   SELECT *
   INTO v_session
-  FROM public.table_sessions
-  WHERE table_number = p_table_number
-    AND status = 'active'
-    AND expires_at > now()
+  FROM public.table_sessions AS active_session
+  WHERE active_session.table_number = p_table_number
+    AND active_session.status = 'active'
+    AND active_session.expires_at > now()
   FOR UPDATE;
 
   IF NOT FOUND THEN

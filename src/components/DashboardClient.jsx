@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
 import { supabase } from '@/lib/supabase';
+import ReservationsPanel from '@/components/ReservationsPanel';
 
 const EMPTY_PRODUCT = {
   id: '',
@@ -39,12 +40,6 @@ const ORDER_STATUS = [
   ['processing', 'În pregătire'],
   ['completed', 'Finalizată'],
   ['executed', 'Executată'],
-];
-
-const RESERVATION_STATUS = [
-  ['pending', 'Nouă'],
-  ['confirmed', 'Confirmată'],
-  ['completed', 'Finalizată'],
 ];
 
 const AUDIT_ACTION_LABELS = {
@@ -340,7 +335,7 @@ export default function DashboardClient() {
         .order('created_at', { ascending: false }),
       supabase
         .from('reservations')
-        .select('id,name,phone,reservation_date,reservation_time,guests,zone,message,status,created_at')
+        .select('id,reservation_number,name,phone,reservation_date,reservation_time,guests,zone,message,table_number,duration_minutes,table_session_id,status,created_at,updated_at')
         .order('reservation_date', { ascending: false })
         .order('reservation_time', { ascending: false }),
       supabase.rpc('admin_get_tables'),
@@ -677,7 +672,6 @@ export default function DashboardClient() {
   const updateStatus = async (kind, id, status) => {
     const rpcByKind = {
       order: ['admin_update_order_status', 'p_order_id'],
-      reservation: ['admin_update_reservation_status', 'p_reservation_id'],
     };
     const [rpcName, idParameter] = rpcByKind[kind];
     setBusyId(id);
@@ -878,40 +872,15 @@ export default function DashboardClient() {
         )}
 
         {activeTab === 'reservations' && (
-          <div className="dashboard-card-list is-compact">
-            {reservations.length === 0 ? (
-              <p className="dashboard-empty">Nu există rezervări.</p>
-            ) : reservations.map((reservation) => (
-              <article key={reservation.id} className="dashboard-record dashboard-record-compact">
-                <div className="dashboard-record-head dashboard-compact-head">
-                  <div className="dashboard-compact-title">
-                    <span className="dashboard-record-date">{reservation.reservation_date}</span>
-                    <div>
-                      <h2>{reservation.name}</h2>
-                      <p>{reservation.reservation_time.slice(0, 5)} · {reservation.guests} persoane</p>
-                    </div>
-                  </div>
-                  <StatusSelect
-                    value={reservation.status}
-                    options={RESERVATION_STATUS}
-                    disabled={busyId === reservation.id}
-                    label="Starea rezervării"
-                    onChange={(status) => updateStatus('reservation', reservation.id, status)}
-                  />
-                </div>
-                <details className="dashboard-details">
-                  <summary>Detalii rezervare</summary>
-                  <div className="dashboard-details-body">
-                    <div className="dashboard-record-details">
-                      <span>Telefon: <a href={`tel:${reservation.phone}`}>{reservation.phone}</a></span>
-                      <span>Zona: {reservation.zone}</span>
-                    </div>
-                    {reservation.message && <p className="dashboard-note">{reservation.message}</p>}
-                  </div>
-                </details>
-              </article>
-            ))}
-          </div>
+          <ReservationsPanel
+            reservations={reservations}
+            busyId={busyId}
+            setBusyId={setBusyId}
+            setErrorMessage={setErrorMessage}
+            setNotice={setNotice}
+            reload={loadDashboard}
+            setQrTable={setQrTable}
+          />
         )}
 
         {activeTab === 'tables' && (

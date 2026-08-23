@@ -75,7 +75,11 @@ codul aplicației și este verificată direct de Supabase.
    `supabase_admin_audit.sql`. Jurnalul înregistrează modificările produselor,
    stărilor comenzilor și sesiunilor meselor și poate fi doar citit din panou.
 
-13. Pornește proiectul:
+13. Pentru numerele rezervărilor, programarea celor șase mese, protecția împotriva
+   suprapunerilor și deschiderea automată a sesiunii QR la sosirea clientului,
+   rulează integral `supabase_reservations_management.sql`.
+
+14. Pornește proiectul:
 
    ```bash
    npm run dev

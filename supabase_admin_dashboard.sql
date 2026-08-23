@@ -365,16 +365,6 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.admin_update_reservation_status(p_reservation_id UUID, p_status TEXT)
-RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
-BEGIN
-  IF NOT private.is_admin() THEN RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'Administrator access required'; END IF;
-  IF p_status NOT IN ('pending', 'confirmed', 'cancelled', 'completed') THEN RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid reservation status'; END IF;
-  UPDATE public.reservations SET status = p_status, updated_at = now() WHERE id = p_reservation_id;
-  IF NOT FOUND THEN RAISE EXCEPTION USING ERRCODE = 'P0002', MESSAGE = 'Reservation not found'; END IF;
-END;
-$$;
-
 CREATE OR REPLACE FUNCTION public.admin_update_message_status(p_message_id UUID, p_status TEXT)
 RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 BEGIN
@@ -387,12 +377,10 @@ $$;
 
 REVOKE ALL ON FUNCTION public.admin_upsert_product(TEXT, TEXT, NUMERIC, TEXT, TEXT, TEXT, BOOLEAN, INTEGER) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.admin_update_order_status(UUID, TEXT) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION public.admin_update_reservation_status(UUID, TEXT) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.admin_update_message_status(UUID, TEXT) FROM PUBLIC, anon;
 
 GRANT EXECUTE ON FUNCTION public.admin_upsert_product(TEXT, TEXT, NUMERIC, TEXT, TEXT, TEXT, BOOLEAN, INTEGER) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.admin_update_order_status(UUID, TEXT) TO authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.admin_update_reservation_status(UUID, TEXT) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.admin_update_message_status(UUID, TEXT) TO authenticated, service_role;
 
 COMMIT;

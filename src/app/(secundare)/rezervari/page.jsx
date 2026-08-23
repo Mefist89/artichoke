@@ -6,7 +6,9 @@ import { submitPublicAction } from '@/lib/deviceId';
 export default function RezervariPage() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ text: '', type: '' });
+  const [reservationNumber, setReservationNumber] = useState('');
   const dateInputRef = useRef(null);
+  const timeInputRef = useRef(null);
   const [turnstileToken, setTurnstileToken] = useState('');
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
@@ -36,6 +38,7 @@ export default function RezervariPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setReservationNumber('');
     setStatus({ text: 'Se trimite...', type: 'info' });
 
     const form = e.target;
@@ -51,7 +54,7 @@ export default function RezervariPage() {
     }
 
     try {
-      await submitPublicAction('reservation', {
+      const number = await submitPublicAction('reservation', {
         name: form.name.value,
         phone: form.phone.value,
         date: form.date.value,
@@ -61,7 +64,8 @@ export default function RezervariPage() {
         message: form.message.value || null,
         turnstileToken,
       });
-      setStatus({ text: 'Rezervarea a fost trimisă cu succes!', type: 'success' });
+      setReservationNumber(`REZ-${number}`);
+      setStatus({ text: 'Cererea a fost înregistrată. Te vom contacta pentru confirmare.', type: 'success' });
       form.reset();
     } catch (error) {
       setStatus({
@@ -167,11 +171,36 @@ export default function RezervariPage() {
                 <div className="contact-form-row">
                   <label>
                     Data
-                    <input ref={dateInputRef} type="date" name="date" required />
+                    <input
+                      ref={dateInputRef}
+                      type="date"
+                      name="date"
+                      required
+                      onChange={(event) => {
+                        const timeInput = timeInputRef.current;
+                        if (!timeInput) return;
+                        const today = dateInputRef.current?.min;
+                        if (event.target.value !== today) {
+                          timeInput.min = '09:00';
+                          return;
+                        }
+
+                        const parts = new Intl.DateTimeFormat('en-GB', {
+                          timeZone: 'Europe/Chisinau',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hourCycle: 'h23',
+                        }).formatToParts(new Date());
+                        const getPart = (type) => Number(parts.find((part) => part.type === type)?.value);
+                        const currentMinutes = getPart('hour') * 60 + getPart('minute');
+                        const nextSlot = Math.max(9 * 60, Math.ceil((currentMinutes + 1) / 30) * 30);
+                        timeInput.min = `${String(Math.floor(nextSlot / 60)).padStart(2, '0')}:${String(nextSlot % 60).padStart(2, '0')}`;
+                      }}
+                    />
                   </label>
                   <label>
                     Ora
-                    <input type="time" name="time" min="09:00" max="22:00" required />
+                    <input ref={timeInputRef} type="time" name="time" min="09:00" max="20:00" step="1800" required />
                   </label>
                 </div>
                 <div className="contact-form-row">
@@ -201,9 +230,16 @@ export default function RezervariPage() {
                   {loading ? 'Se trimite...' : 'Trimite rezervarea'}
                 </button>
                 {status.text && (
-                  <p className="form-status" style={{ color: status.type === 'error' ? 'red' : 'green', marginTop: '1rem' }}>
-                    {status.text}
-                  </p>
+                  <div className={`reservation-submit-result is-${status.type}`} aria-live="polite">
+                    {reservationNumber && (
+                      <>
+                        <span>Numărul rezervării</span>
+                        <strong>{reservationNumber}</strong>
+                        <small>Păstrează acest număr până la confirmare.</small>
+                      </>
+                    )}
+                    <p>{status.text}</p>
+                  </div>
                 )}
               </form>
             </article>
