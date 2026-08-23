@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 const THEME_CHANGE_EVENT = 'artichoke-theme-change';
@@ -33,7 +33,9 @@ export default function Header() {
     getServerThemeSnapshot,
   );
   const [user, setUser] = useState(null);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     // Auth State Observer
@@ -61,6 +63,16 @@ export default function Header() {
   };
 
   const isActive = (path) => pathname === path ? 'is-active' : '';
+  const signOutAdmin = async () => {
+    if (isSigningOut) return;
+    setIsSigningOut(true);
+    window.localStorage.removeItem('artichoke_admin_last_activity');
+    await supabase.auth.signOut();
+    setUser(null);
+    setIsNavOpen(false);
+    router.replace('/login');
+    router.refresh();
+  };
 
   return (
     <>
@@ -114,9 +126,23 @@ export default function Header() {
                 </Link>
               )}
             </div>
-            <Link href="/cos" className="theme-toggle" style={{ marginLeft: '0.5rem' }} title="Coșul de cumpărături">
-              <span className="material-icons-outlined">shopping_cart</span>
-            </Link>
+            {user ? (
+              <button
+                type="button"
+                className="theme-toggle"
+                style={{ marginLeft: '0.5rem' }}
+                title="Ieșire din administrare"
+                aria-label="Ieșire din administrare"
+                disabled={isSigningOut}
+                onClick={signOutAdmin}
+              >
+                <span className="material-icons-outlined">logout</span>
+              </button>
+            ) : (
+              <Link href="/cos" className="theme-toggle" style={{ marginLeft: '0.5rem' }} title="Coșul de cumpărături">
+                <span className="material-icons-outlined">shopping_cart</span>
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -135,7 +161,13 @@ export default function Header() {
           ) : (
             <Link href="/login" onClick={() => setIsNavOpen(false)} className={isActive('/login')}>Intră / Logare</Link>
           )}
-          <Link href="/cos" onClick={() => setIsNavOpen(false)} className={isActive('/cos')}>Coșul de cumpărături</Link>
+          {user ? (
+            <button type="button" className="mobile-nav-logout" disabled={isSigningOut} onClick={signOutAdmin}>
+              Ieșire din administrare
+            </button>
+          ) : (
+            <Link href="/cos" onClick={() => setIsNavOpen(false)} className={isActive('/cos')}>Coșul de cumpărături</Link>
+          )}
         </div>
       </nav>
     </>

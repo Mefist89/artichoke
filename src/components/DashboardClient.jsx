@@ -228,6 +228,7 @@ export default function DashboardClient() {
   const [reportDay, setReportDay] = useState('');
   const [reportStart, setReportStart] = useState('');
   const [reportEnd, setReportEnd] = useState('');
+  const [exportingReport, setExportingReport] = useState('');
   const [manualProductId, setManualProductId] = useState('');
   const [manualQuantity, setManualQuantity] = useState(1);
   const [manualOrderItems, setManualOrderItems] = useState([]);
@@ -432,6 +433,38 @@ export default function DashboardClient() {
     ) || 0),
     amount: totals.amount + Number(order.total || 0),
   }), { orders: 0, quantity: 0, amount: 0 }), [reportOrders]);
+
+  const downloadReport = async (format) => {
+    if (reportOrders.length === 0 || exportingReport) return;
+
+    setExportingReport(format);
+    setErrorMessage('');
+    setNotice('');
+
+    try {
+      const reportExport = await import('@/lib/reportExport');
+      const report = {
+        orders: reportOrders,
+        mode: reportMode,
+        day: reportDay,
+        start: reportStart,
+        end: reportEnd,
+      };
+
+      if (format === 'pdf') {
+        await reportExport.exportReportPdf(report);
+      } else {
+        await reportExport.exportReportExcel(report);
+      }
+
+      setNotice(`Raportul ${format.toUpperCase()} a fost descărcat.`);
+    } catch (error) {
+      console.error('Report export failed:', error);
+      setErrorMessage('Raportul nu a putut fi generat. Încearcă din nou.');
+    } finally {
+      setExportingReport('');
+    }
+  };
 
   const manualOrderRows = useMemo(() => manualOrderItems.map((item) => {
     const product = products.find((candidate) => candidate.id === item.product_id);
@@ -994,6 +1027,25 @@ export default function DashboardClient() {
                     </label>
                   </>
                 )}
+              </div>
+
+              <div className="dashboard-report-export-actions" aria-label="Descarcă raportul">
+                <button
+                  type="button"
+                  className="dashboard-report-export dashboard-report-export-pdf"
+                  disabled={reportOrders.length === 0 || Boolean(exportingReport)}
+                  onClick={() => downloadReport('pdf')}
+                >
+                  {exportingReport === 'pdf' ? 'Se generează…' : 'Descarcă PDF'}
+                </button>
+                <button
+                  type="button"
+                  className="dashboard-report-export dashboard-report-export-excel"
+                  disabled={reportOrders.length === 0 || Boolean(exportingReport)}
+                  onClick={() => downloadReport('excel')}
+                >
+                  {exportingReport === 'excel' ? 'Se generează…' : 'Descarcă Excel'}
+                </button>
               </div>
             </div>
 

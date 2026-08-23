@@ -645,14 +645,29 @@ a {
   padding: 0.8rem 0 1rem;
 }
 
-.mobile-nav a {
+.mobile-nav a,
+.mobile-nav-logout {
+  width: 100%;
+  border: 0;
   padding: 0.7rem 0.75rem;
   border-radius: 0.7rem;
   background: color-mix(in srgb, var(--surface) 62%, #fff);
+  color: var(--text);
   font-size: 0.86rem;
   font-weight: 700;
   letter-spacing: 0.06em;
+  text-align: left;
   text-transform: uppercase;
+}
+
+.mobile-nav-logout {
+  cursor: pointer;
+}
+
+.theme-toggle:disabled,
+.mobile-nav-logout:disabled {
+  opacity: 0.55;
+  cursor: wait;
 }
 
 .mobile-nav a.is-active {
@@ -3811,6 +3826,7 @@ html.dark .service-card {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 1rem;
   padding: 1rem;
 }
@@ -3839,7 +3855,8 @@ html.dark .service-card {
 }
 
 .dashboard-report-mode button:focus-visible,
-.dashboard-report-dates input:focus-visible {
+.dashboard-report-dates input:focus-visible,
+.dashboard-report-export:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--primary) 45%, transparent);
   outline-offset: 2px;
 }
@@ -3866,6 +3883,43 @@ html.dark .service-card {
   background: color-mix(in srgb, var(--bg) 65%, var(--card));
   color: var(--text);
   font: inherit;
+}
+
+.dashboard-report-export-actions {
+  display: flex;
+  gap: 0.55rem;
+  margin-left: auto;
+}
+
+.dashboard-report-export {
+  min-height: 2.65rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent);
+  border-radius: 0.7rem;
+  padding: 0.65rem 0.9rem;
+  color: var(--primary);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 850;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
+}
+
+.dashboard-report-export-pdf {
+  background: color-mix(in srgb, #d85a4b 13%, var(--card));
+}
+
+.dashboard-report-export-excel {
+  background: color-mix(in srgb, #238a57 13%, var(--card));
+}
+
+.dashboard-report-export:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 7px 16px rgba(0, 0, 0, 0.08);
+}
+
+.dashboard-report-export:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
 }
 
 .dashboard-report-summary {
@@ -4864,9 +4918,14 @@ body:has(.order-board-page) .scroll-top-btn {
   }
 
   .dashboard-report-mode,
-  .dashboard-report-dates {
+  .dashboard-report-dates,
+  .dashboard-report-export-actions {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-report-export-actions {
+    margin-left: 0;
   }
 
   .dashboard-report-dates input {
