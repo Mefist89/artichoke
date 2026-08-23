@@ -81,7 +81,12 @@ codul aplicației și este verificată direct de Supabase.
    rulată înainte de introducerea alegerii mesei în formularul public, rulează și
    `supabase_reservation_table_choice.sql`.
 
-14. Pornește proiectul:
+14. Pentru încărcarea imaginilor produselor direct din panoul administratorului,
+   rulează integral `supabase_product_images.sql`. Migrarea creează bucket-ul
+   public `product-images`, limitează fișierele la 5 MB și permite încărcarea,
+   modificarea sau ștergerea numai administratorilor.
+
+15. Pornește proiectul:
 
    ```bash
    npm run dev

@@ -211,7 +211,9 @@ export default function TableOrderClient({ token }) {
               <div className="table-order-products">
                 {categoryProducts.map((product) => {
                   const quantity = Number(quantities[product.id] || 0);
-                  const imagePath = product.image?.startsWith('/') ? product.image : '';
+                  const imagePath = product.image?.startsWith('/') || product.image?.startsWith('https://')
+                    ? product.image
+                    : '';
                   return (
                     <article key={product.id} className={quantity > 0 ? 'is-selected' : ''}>
                       <div className="table-order-product-image">

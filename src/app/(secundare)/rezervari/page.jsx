@@ -32,6 +32,11 @@ export default function RezervariPage() {
   const [turnstileToken, setTurnstileToken] = useState('');
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
+  const closeConfirmation = () => {
+    setReservationNumber('');
+    setStatus({ text: '', type: '' });
+  };
+
   const currentChisinau = getChisinauParts();
   const today = `${currentChisinau.year}-${currentChisinau.month}-${currentChisinau.day}`;
   const currentMinutes = Number(currentChisinau.hour) * 60 + Number(currentChisinau.minute);
@@ -61,6 +66,26 @@ export default function RezervariPage() {
     dateInput.min = today;
     dateInput.max = lastAvailableDate;
   }, []);
+
+  useEffect(() => {
+    if (!reservationNumber) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') {
+        setReservationNumber('');
+        setStatus({ text: '', type: '' });
+      }
+    };
+
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [reservationNumber]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -252,15 +277,8 @@ export default function RezervariPage() {
                 <button type="submit" disabled={loading}>
                   {loading ? 'Se trimite...' : 'Trimite rezervarea'}
                 </button>
-                {status.text && (
+                {status.text && !reservationNumber && (
                   <div className={`reservation-submit-result is-${status.type}`} aria-live="polite">
-                    {reservationNumber && (
-                      <>
-                        <span>Numărul rezervării</span>
-                        <strong>{reservationNumber}</strong>
-                        <small>Păstrează acest număr până la confirmare.</small>
-                      </>
-                    )}
                     <p>{status.text}</p>
                   </div>
                 )}
@@ -269,6 +287,46 @@ export default function RezervariPage() {
           </div>
         </section>
       </div>
+
+      {reservationNumber && (
+        <div
+          className="reservation-modal-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) closeConfirmation();
+          }}
+        >
+          <section
+            className="reservation-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reservation-confirmation-title"
+          >
+            <button
+              type="button"
+              className="reservation-modal-close"
+              onClick={closeConfirmation}
+              aria-label="Închide confirmarea"
+            >
+              <span className="material-icons-outlined" aria-hidden="true">close</span>
+            </button>
+            <span className="reservation-modal-icon material-icons-outlined" aria-hidden="true">
+              check_circle
+            </span>
+            <p className="reservation-modal-kicker">Rezervare înregistrată</p>
+            <h2 id="reservation-confirmation-title">Cererea a fost trimisă</h2>
+            <p>Te vom contacta pentru confirmarea mesei.</p>
+            <div className="reservation-modal-number">
+              <span>Numărul rezervării</span>
+              <strong>{reservationNumber}</strong>
+            </div>
+            <small>Păstrează acest număr până la confirmare.</small>
+            <button type="button" className="reservation-modal-action" onClick={closeConfirmation} autoFocus>
+              Am înțeles
+            </button>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

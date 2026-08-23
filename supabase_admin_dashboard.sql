@@ -234,7 +234,13 @@ BEGIN
   IF pg_catalog.char_length(v_description) > 1000 THEN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Description is too long';
   END IF;
-  IF v_image IS NOT NULL AND (v_image !~ '^/img/[A-Za-z0-9_./-]+$' OR pg_catalog.char_length(v_image) > 255) THEN
+  IF v_image IS NOT NULL AND (
+    pg_catalog.char_length(v_image) > 500
+    OR (
+      v_image !~ '^/img/[A-Za-z0-9_./-]+$'
+      AND v_image !~ '^https://[a-z0-9]+\.supabase\.co/storage/v1/object/public/product-images/[A-Za-z0-9_./-]+$'
+    )
+  ) THEN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'Invalid image path';
   END IF;
   IF p_sort_order IS NULL OR p_sort_order NOT BETWEEN 0 AND 9999 THEN

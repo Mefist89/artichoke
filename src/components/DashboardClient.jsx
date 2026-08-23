@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { QRCodeSVG } from 'qrcode.react';
 import { supabase } from '@/lib/supabase';
 import ReservationsPanel from '@/components/ReservationsPanel';
@@ -69,6 +70,13 @@ const AUDIT_FIELD_LABELS = {
 
 const ADMIN_INACTIVITY_LIMIT_MS = 30 * 60 * 1000;
 const ADMIN_ACTIVITY_STORAGE_KEY = 'artichoke_admin_last_activity';
+const PRODUCT_IMAGE_TYPES = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/avif': 'avif',
+};
+const PRODUCT_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
 function formatDate(value) {
   if (!value) return '—';
@@ -208,6 +216,7 @@ export default function DashboardClient() {
   const [activeTab, setActiveTab] = useState('products');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [busyId, setBusyId] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [notice, setNotice] = useState('');
@@ -509,6 +518,56 @@ export default function DashboardClient() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const uploadProductImage = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    const productId = productForm.id.trim().toLowerCase();
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(productId)) {
+      setErrorMessage('Introdu mai întâi un ID valid pentru produs.');
+      return;
+    }
+
+    const extension = PRODUCT_IMAGE_TYPES[file.type];
+    if (!extension) {
+      setErrorMessage('Imaginea trebuie să fie JPG, PNG, WebP sau AVIF.');
+      return;
+    }
+    if (file.size > PRODUCT_IMAGE_MAX_BYTES) {
+      setErrorMessage('Imaginea este prea mare. Dimensiunea maximă este 5 MB.');
+      return;
+    }
+
+    setUploadingImage(true);
+    setErrorMessage('');
+    setNotice('');
+
+    const objectPath = `${productId}/${crypto.randomUUID()}.${extension}`;
+    const { error: uploadError } = await supabase.storage
+      .from('product-images')
+      .upload(objectPath, file, {
+        cacheControl: '31536000',
+        contentType: file.type,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      setErrorMessage('Imaginea nu a putut fi încărcată. Verifică configurarea Storage în Supabase.');
+      setUploadingImage(false);
+      return;
+    }
+
+    const { data } = supabase.storage.from('product-images').getPublicUrl(objectPath);
+    setProductForm((current) => (
+      current.id.trim().toLowerCase() === productId
+        ? { ...current, image: data.publicUrl }
+        : current
+    ));
+    setNotice('Imaginea a fost încărcată. Salvează produsul pentru a aplica modificarea.');
+    setUploadingImage(false);
+  };
+
   const saveProduct = async (event) => {
     event.preventDefault();
     setSaving(true);
@@ -769,7 +828,36 @@ export default function DashboardClient() {
                 <label>Preț (MDL)<input required type="number" min="0.01" max="100000" step="0.01" value={productForm.price} onChange={(e) => setProductForm({ ...productForm, price: e.target.value })} /></label>
                 <label>Categorie<select value={productForm.category} onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}>{CATEGORY_OPTIONS.map(([id, text]) => <option key={id} value={id}>{text}</option>)}</select></label>
                 <label>Ordine<input required type="number" min="0" max="9999" value={productForm.sort_order} onChange={(e) => setProductForm({ ...productForm, sort_order: e.target.value })} /></label>
-                <label>Cale imagine<input maxLength="255" value={productForm.image} onChange={(e) => setProductForm({ ...productForm, image: e.target.value })} placeholder="/img/cofe/produs.jpg" /></label>
+                <div className="dashboard-image-field">
+                  <span>Imagine produs</span>
+                  <div className="dashboard-image-controls">
+                    <input
+                      id="dashboard-product-image-file"
+                      className="dashboard-image-file-input"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/avif"
+                      onChange={uploadProductImage}
+                      disabled={uploadingImage || !productForm.id}
+                    />
+                    <label htmlFor="dashboard-product-image-file" className="dashboard-image-upload">
+                      <span className="material-icons-outlined" aria-hidden="true">upload</span>
+                      {uploadingImage ? 'Se încarcă…' : 'Încarcă de pe PC'}
+                    </label>
+                    <small>JPG, PNG, WebP sau AVIF · maximum 5 MB</small>
+                  </div>
+                  <input
+                    aria-label="Calea imaginii"
+                    maxLength="500"
+                    value={productForm.image}
+                    onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
+                    placeholder="/img/cofe/produs.jpg"
+                  />
+                  {productForm.image && (/^\//.test(productForm.image) || /^https:\/\//.test(productForm.image)) && (
+                    <div className="dashboard-image-preview">
+                      <Image src={productForm.image} alt="Previzualizare produs" width={180} height={120} />
+                    </div>
+                  )}
+                </div>
                 <label className="dashboard-description">Descriere<textarea maxLength="1000" rows="3" value={productForm.description} onChange={(e) => setProductForm({ ...productForm, description: e.target.value })} /></label>
                 <label className="dashboard-checkbox"><input type="checkbox" checked={productForm.active} onChange={(e) => setProductForm({ ...productForm, active: e.target.checked })} />Produs activ și vizibil în meniu</label>
               </div>

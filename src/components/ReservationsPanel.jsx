@@ -273,7 +273,13 @@ export default function ReservationsPanel({
       <div className="dashboard-reservation-schedule">
         {scheduledByTable.map(({ tableNumber, reservations: tableReservations }) => (
           <article key={tableNumber} className={tableReservations.length ? 'is-booked' : 'is-free'}>
-            <header><span>Masa</span><strong>{tableNumber}</strong></header>
+            <header>
+              <div className="dashboard-reservation-table-heading">
+                <span>Masa</span>
+                {tableReservations.length > 0 && <em>Rezervată</em>}
+              </div>
+              <strong>{tableNumber}</strong>
+            </header>
             {tableReservations.length === 0 ? (
               <p>Liberă</p>
             ) : tableReservations.map((reservation) => (
