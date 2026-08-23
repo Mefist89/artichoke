@@ -65,9 +65,6 @@ export default function Footer() {
       <div className="container copyright">
         © 2026 SRL Play Room Artichoke. Toate drepturile rezervate.
       </div>
-      <p className="container site-disclaimer">
-        Acest website a fost realizat în cadrul competiției „Tekwill Junior Ambassadors” organizată de proiectul „Tekwill în Fiecare Școală” și nu reflectă neapărat opinia proiectului.
-      </p>
     </footer>
   );
 }
